@@ -1,0 +1,239 @@
+import { model } from 'mongoose';
+import xlsx from "xlsx";
+const { readFile, utils } = xlsx;
+
+
+
+
+
+import { categorySchema } from '../schema/categorySchema.js';
+
+const categoryData = model('category', categorySchema);
+import { questionSchema } from '../schema/questionSchema.js';
+const questionData = model('question', questionSchema);
+
+
+
+
+
+const createquestion = async (req, res) => {
+    try {
+      
+        const filePath = req.file.path; 
+
+        
+        const workbook = readFile(filePath);
+        const sheetName = workbook.SheetNames[0]; // ✅ Pehli sheet select karna
+        const jsonData = utils.sheet_to_json(workbook.Sheets[sheetName]);
+
+        console.log("✅ Excel Data Processed:", jsonData);
+
+       
+        const questions = await Promise.all(jsonData.map(async (row) => {
+         i
+            const categoryName = row.category;
+
+           
+            const category = await categoryData.findOne({ name: categoryName });
+
+           
+            
+            return {
+                category: category._id,  
+                questionType: row.question_type,
+                text: {
+                    en: row.question_en || "",
+                    ar: row.question_ar || ""
+                },
+                media: row.media_en || "",
+                options: {
+                    A: { en: row.option_en_a || "", ar: row.option_ar_a || "", isCorrect: row.answer === "A" },
+                    B: { en: row.option_en_b || "", ar: row.option_ar_b || "", isCorrect: row.answer === "B" },
+                    C: { en: row.option_en_c || "", ar: row.option_ar_c || "", isCorrect: row.answer === "C" },
+                    D: { en: row.option_en_d || "", ar: row.option_ar_d || "", isCorrect: row.answer === "D" }
+                },
+                ageRange: row.age_range
+            };
+        }));
+
+        // ✅ MongoDB me `insertMany()` se batch insert
+        await questionData.insertMany(questions);
+
+        unlink(filePath, (err) => {
+            if (err) console.error("❌ Error deleting file:", err);
+            else console.log("✅ File deleted:", filePath);
+        });
+
+        res.status(200).json({ message: "✅ Excel File Processed & Data Inserted" });
+    } catch (error) {
+        console.error("❌ Error Processing Excel File:", error);
+        res.status(500).json({ message: `❌ Error Processing Excel File: ${error.message}` });
+    }
+};
+
+
+const createQuestionbyself = async (req, res) => {
+    try {
+        const {
+            categoryName, // Category name from request body
+            questionType,
+            text,
+            media,
+            options,
+            ageRange
+        } = req.body;
+
+       
+        const category = await categoryData.findOne({ name: categoryName });
+        if (!category) {
+            return res.status(404).json({ message: "Category not found!" });
+        }
+
+     
+        const newQuestion = new questionData({
+            category: category._id,  
+            questionType,
+            text,
+            media,
+            options,
+            ageRange
+        });
+
+    
+        await newQuestion.save();
+
+   
+        res.status(201).json({
+            message: "Question successfully created",
+            data: newQuestion
+        });
+
+    } catch (error) {
+        console.error("Error creating question:", error);
+        res.status(500).json({ message: "Error creating question" });
+    }
+};
+
+const getQuestions = async (req, res) => {
+    try {
+        const { categoryName, questionType, ageRange, page = 1, limit = 10 } = req.query;
+
+        
+        const category = await categoryData.findOne({ name: categoryName });
+        if (!category) {
+            return res.status(404).json({ message: "Category not found!" });
+        }
+
+        
+        let query = { category: category._id };
+        if (questionType) query.questionType = questionType;
+        if (ageRange) query.ageRange = ageRange;
+
+        
+        const pageNumber = parseInt(page, 10);
+        const limitNumber = parseInt(limit, 10);
+        const skip = (pageNumber - 1) * limitNumber;
+
+     
+        const totalQuestions = await questionData.countDocuments(query);
+
+        
+        const questions = await questionData.find(query)
+            .skip(skip)
+            .limit(limitNumber);
+
+        res.status(200).json({
+            message: "Questions fetched successfully",
+            totalQuestions,
+            totalPages: Math.ceil(totalQuestions / limitNumber),
+            currentPage: pageNumber,
+            data: questions
+        });
+
+    } catch (error) {
+        console.error("Error fetching questions:", error);
+        res.status(500).json({ message: "Error fetching questions" });
+    }
+};
+
+
+const deletequetion = async (req, res) => {
+    try {
+    
+      const { _id } = req.params;
+  
+    
+      if (!id) {
+        return res.status(400).json({ error: 'question ID is required' });
+      }
+  
+  
+      const deletedquestion = await questionData.findByIdAndDelete(_id);
+  
+     
+      if (!deletedquestion) {
+        return res.status(404).json({ error: 'Customer not found' });
+      }
+  
+      
+      res.status(200).json({ message: 'question deleted successfully', data: deletedquestion });
+    } catch (error) {
+      console.error(error); 
+      res.status(500).json({ error: 'Error deleting question' });
+    }
+  };
+  
+  const Editquestion = async (req, res) => {
+    try {
+        const {
+            _id,  
+            categoryName,
+            questionType,
+            text,
+            media,
+            options,
+            ageRange
+        } = req.body;
+
+        if (!_id) {
+            return res.status(400).json({ message: 'ID is required' });
+        }
+
+     
+        const category = await categoryData.findOne({ name: categoryName });
+
+     
+        if (!category) {
+            return res.status(404).json({ message: 'Category not found' });
+        }
+
+    
+        const updatedquestion = await questionData.findByIdAndUpdate(
+            _id,
+            {  
+                category: category._id, 
+                questionType,
+                text,
+                media,
+                options,
+                ageRange
+            },
+            { new: true, runValidators: true }
+        );
+
+
+        res.status(200).json({ message: 'Question updated successfully', data: updatedquestion });
+
+    } catch (error) {
+        console.error("Error:", error);
+        res.status(500).json({ error: 'Error updating question' });
+    }
+};
+
+
+
+
+  export { createquestion, createQuestionbyself, deletequetion, Editquestion, getQuestions };
+
+
+
