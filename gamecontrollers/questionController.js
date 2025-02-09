@@ -44,7 +44,7 @@ const createquestion = async (req, res) => {
 
        
         const questions = await Promise.all(jsonData.map(async (row) => {
-         i
+         
             const categoryName = row.category;
 
            
