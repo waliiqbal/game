@@ -27,7 +27,7 @@ http.get("/gameApp/getAge", getAge);
 http.post("/gameApp/createquestion", upload.single("file"), createquestion);
 http.post("/gameApp/createQuestionbyself", createQuestionbyself);
 http.get("/gameApp/getQuestions", getQuestions);
-http.get("/gameApp/getQuestions", getQuestions);
+http.get("/gameApp/getCategories", getCategories);
 
 http.delete("/gameApp/deletequetion/:_id", deletequetion);
 http.patch("/gameApp/Editquestion", Editquestion);
