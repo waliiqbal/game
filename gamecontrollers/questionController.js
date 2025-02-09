@@ -1,6 +1,7 @@
 import { model } from 'mongoose';
 import xlsx from "xlsx";
 const { readFile, utils } = xlsx;
+import fs from 'fs';
 
 
 
@@ -31,10 +32,11 @@ const uploadFile = async (req, res) => {
 };
 
 const createquestion = async (req, res) => {
+    const filePath = req.file.path; 
+
     try {
       
-        const filePath = req.file.path; 
-
+        
         
         const workbook = readFile(filePath);
         const sheetName = workbook.SheetNames[0]; // ✅ Pehli sheet select karna
@@ -48,9 +50,11 @@ const createquestion = async (req, res) => {
             const categoryName = row.category;
 
            
-            const category = await categoryData.findOne({ name: categoryName });
+            let category = await categoryData.findOne({ name: categoryName });
 
-           
+            if (!category) {
+                return ;
+            }
             
             return {
                 category: category._id,  
@@ -73,13 +77,17 @@ const createquestion = async (req, res) => {
         // ✅ MongoDB me `insertMany()` se batch insert
         await questionData.insertMany(questions);
 
-        unlink(filePath, (err) => {
+        fs.unlink(filePath, (err) => {
             if (err) console.error("❌ Error deleting file:", err);
             else console.log("✅ File deleted:", filePath);
         });
 
         res.status(200).json({ message: "✅ Excel File Processed & Data Inserted" });
     } catch (error) {
+        fs.unlink(filePath, (err) => {
+            if (err) console.error("❌ Error deleting file:", err);
+            else console.log("✅ File deleted:", filePath);
+        });
         console.error("❌ Error Processing Excel File:", error);
         res.status(500).json({ message: `❌ Error Processing Excel File: ${error.message}` });
     }
