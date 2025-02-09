@@ -16,6 +16,20 @@ const questionData = model('question', questionSchema);
 
 
 
+const uploadFile = async (req, res) => {
+    try {
+      
+        const filePath = req.file.path;
+        
+        console.log("lokout",filePath);
+
+        res.status(200).json({ url: filePath, message: "✅ Excel File Processed & Data Inserted" });
+    } catch (error) {
+        console.error("❌ Error Processing Excel File:", error);
+        res.status(500).json({ message: `❌ Error Processing Excel File: ${error.message}` });
+    }
+};
+
 const createquestion = async (req, res) => {
     try {
       
@@ -116,10 +130,10 @@ const createQuestionbyself = async (req, res) => {
 
 const getQuestions = async (req, res) => {
     try {
-        const { categoryName, questionType, ageRange, page = 1, limit = 10 } = req.query;
+        const { categoryId, questionType, ageRange, page = 1, limit = 10 } = req.query;
 
         
-        const category = await categoryData.findOne({ name: categoryName });
+        const category = await categoryData.findOne({ _id: categoryId });
         if (!category) {
             return res.status(404).json({ message: "Category not found!" });
         }
@@ -156,6 +170,26 @@ const getQuestions = async (req, res) => {
     }
 };
 
+const getquestionbyId = async (req, res) => {
+    try {
+    
+        const _id = req.params._id;
+  
+      const question = await 
+      questionData.findOne({_id}) 
+        
+    
+      return res.json({
+        success: true,
+        data: question,
+       
+      });
+    } catch (error) {
+      console.error(error); 
+      return res.status(500).json({ success: false, error: 'Error retrieving question' });
+    }
+  };
+  
 
 const deletequetion = async (req, res) => {
     try {
@@ -230,10 +264,19 @@ const deletequetion = async (req, res) => {
     }
 };
 
+const getAge = (req, res) => {
+    let age = ["6-12", "13-18", "19-30", "31-45", "45 Above"  ];
+
+    res.status(200).json({
+        message: "Age fetched successfully",
+        data: age
+    });
+};
 
 
 
-  export { createquestion, createQuestionbyself, deletequetion, Editquestion, getQuestions };
+
+  export { createquestion, getAge, uploadFile, createQuestionbyself, deletequetion, Editquestion, getQuestions, getquestionbyId };
 
 
 

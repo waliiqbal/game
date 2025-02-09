@@ -100,6 +100,27 @@ const getCategories = async (req, res) => {
   }
 };
 
-  export {createcategory, deletecategory, editCategory, getCategories }
+const getcategorybyId = async (req, res) => {
+    try {
+    
+      const _id = req.params._id;
+  
+      const category = await 
+      categoryData.findOne({_id}) 
+        
+    
+      return res.json({
+        success: true,
+        data: category,
+       
+      });
+    } catch (error) {
+      console.error(error); 
+      return res.status(500).json({ success: false, error: 'Error retrieving categoty' });
+    }
+  };
+  
+
+  export {createcategory, deletecategory, editCategory, getCategories, getcategorybyId }
 
 
