@@ -22,25 +22,25 @@ const questionSchema = new Schema({
     options: {
         A: {
             ar: { type: String, required: false },
-            en: { type: String, required: false },
-            isCorrect: { type: Boolean, required: false}
-        },
-        B: {
+            en: { type: String, required: false }
+          },
+          B: {
             ar: { type: String, required: false },
-            en: { type: String, required: false },
-            isCorrect: { type: Boolean, required: false}
-        },
-        C: {
+            en: { type: String, required: false }
+          },
+          C: {
             ar: { type: String, required: false },
-            en: { type: String, required: false },
-            isCorrect: { type: Boolean, required: false}
-        },
-        D: {
+            en: { type: String, required: false }
+          },
+          D: {
             ar: { type: String, required: false },
-            en: { type: String, required: false },
-            isCorrect: { type: Boolean, required: false}
+            en: { type: String, required: false }
+          }
         },
-        
+    correctAnswer: { 
+        type: String,
+        enum: ['A', 'B', 'C', 'D'],
+        required: true,
     },
     
     ageRange: { 

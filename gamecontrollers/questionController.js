@@ -65,11 +65,12 @@ const createquestion = async (req, res) => {
                 },
                 media: row.media_en || "",
                 options: {
-                    A: { en: row.option_en_a || "", ar: row.option_ar_a || "", isCorrect: row.answer === "A" },
-                    B: { en: row.option_en_b || "", ar: row.option_ar_b || "", isCorrect: row.answer === "B" },
-                    C: { en: row.option_en_c || "", ar: row.option_ar_c || "", isCorrect: row.answer === "C" },
-                    D: { en: row.option_en_d || "", ar: row.option_ar_d || "", isCorrect: row.answer === "D" }
+                    A: { ar: row.option_ar_a || "", en: row.option_en_a || "" },
+                    B: { ar:  row.option_ar_b || "", en: row.option_en_b || "" },
+                    C: { ar: row.option_ar_c || "", en: row.option_en_c || "" },
+                    D: { ar: row.option_ar_d || "", en: row.option_en_d || "" }
                 },
+                correctAnswer: row.answer,
                 ageRange: row.age_range
             };
         }));
@@ -102,6 +103,7 @@ const createQuestionbyself = async (req, res) => {
             text,
             media,
             options,
+            correctAnswer,
             ageRange
         } = req.body;
 
@@ -118,6 +120,7 @@ const createQuestionbyself = async (req, res) => {
             text,
             media,
             options,
+            correctAnswer,
             ageRange
         });
 
@@ -234,6 +237,7 @@ const deletequetion = async (req, res) => {
             text,
             media,
             options,
+            correctAnswer,
             ageRange
         } = req.body;
 
@@ -258,6 +262,7 @@ const deletequetion = async (req, res) => {
                 text,
                 media,
                 options,
+                correctAnswer,
                 ageRange
             },
             { new: true, runValidators: true }
