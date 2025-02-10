@@ -172,7 +172,8 @@ const getQuestions = async (req, res) => {
             totalQuestions,
             totalPages: Math.ceil(totalQuestions / limitNumber),
             currentPage: pageNumber,
-            data: questions
+            data: questions,
+            categoryName: category?.name
         });
 
     } catch (error) {
