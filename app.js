@@ -7,7 +7,12 @@ import CustomRoutes from "./routes/routes.js";
 const app = express();
 const port = 3002;
 
-app.use(cors());
+app.use(cors({
+  origin: "*",  // Allows all domains (for testing, not recommended for production)
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
+
 app.use(express.static('public')); // ✅ Corrected
 app.use(express.json({ limit: '50mb' })); // ✅ Corrected
 
