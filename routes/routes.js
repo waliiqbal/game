@@ -1,7 +1,7 @@
 import cors from "cors";
 
 
-import { createquestion, uploadFile, getAge, createQuestionbyself, deletequetion, Editquestion, getQuestions, getquestionbyId } from "../gamecontrollers/questionController.js";
+import { createquestion, uploadFile, getAge, createQuestionbyself, deletequetion, Editquestion, getQuestions, getquestionbyId, createMeme, getMeme } from "../gamecontrollers/questionController.js";
 
  import { createcategory, deletecategory, editCategory, getCategories, getcategorybyId } from "../gamecontrollers/categoryController.js";
  import upload from "../MiddleWear/multer.js"; // Adjust path as needed
@@ -22,11 +22,14 @@ const CustomRoutes = (http, express) => {
   
 // question routes 
 http.post("/gameApp/upload", uploadCloudnart.single("file"), uploadFile);
+http.post("/gameApp/createMeme", uploadCloudnart.single("file"), createMeme);
+http.get("/gameApp/getMeme", getMeme);
 http.get("/gameApp/getAge", getAge);
 
 http.post("/gameApp/createquestion", upload.single("file"), createquestion);
 http.post("/gameApp/createQuestionbyself", createQuestionbyself);
 http.get("/gameApp/getQuestions", getQuestions);
+
 http.get("/gameApp/getCategories", getCategories);
 
 http.delete("/gameApp/deletequetion/:_id", deletequetion);

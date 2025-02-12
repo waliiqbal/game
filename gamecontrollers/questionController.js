@@ -12,6 +12,9 @@ import { categorySchema } from '../schema/categorySchema.js';
 const categoryData = model('category', categorySchema);
 import { questionSchema } from '../schema/questionSchema.js';
 const questionData = model('question', questionSchema);
+import { memeSchema } from '../schema/memeSchema.js';
+const memeData = model('meme', memeSchema);
+
 
 
 
@@ -31,6 +34,37 @@ const uploadFile = async (req, res) => {
     }
 };
 
+const createMeme = async (req, res) => {
+    try {
+        const filePath = req.file.path;
+        console.log(" Uploaded File Path:", filePath);
+
+        const meme = new memeData({ name: filePath });
+        await meme.save();
+
+        res.status(200).json({ url: filePath, message: " File Uploaded & Saved in Database" });
+    } catch (error) {
+        console.error(" Error Uploading File:", error);
+        res.status(500).json({ message: ` Error Uploading File: ${error.message}` });
+    }
+};
+
+const getMeme = async (req, res) => {
+    try {
+        const count = await memeData.countDocuments();
+        if (count === 0) {
+            return res.status(404).json({ message: " No memes found" });
+        }
+
+        const randomIndex = Math.floor(Math.random() * count);
+        const randomMeme = await memeData.findOne().skip(randomIndex);
+
+        res.status(200).json({ data: randomMeme });
+    } catch (error) {
+        console.error(" Error Fetching Meme:", error);
+        res.status(500).json({ message: ` Error Fetching Meme: ${error.message}` });
+    }
+};
 const createquestion = async (req, res) => {
     const filePath = req.file.path; 
 
@@ -290,7 +324,7 @@ const getAge = (req, res) => {
 
 
 
-  export { createquestion, getAge, uploadFile, createQuestionbyself, deletequetion, Editquestion, getQuestions, getquestionbyId };
+  export { createquestion, getAge, uploadFile, createQuestionbyself, deletequetion, Editquestion, getQuestions, getquestionbyId, createMeme, getMeme };
 
 
 
