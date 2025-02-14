@@ -27,10 +27,10 @@ const uploadFile = async (req, res) => {
         
         console.log("lokout",filePath);
 
-        res.status(200).json({ url: filePath, message: "✅ Excel File Processed & Data Inserted" });
+        res.status(200).json({ url: filePath, message: " File Processed & Data Inserted" });
     } catch (error) {
-        console.error("❌ Error Processing Excel File:", error);
-        res.status(500).json({ message: `❌ Error Processing Excel File: ${error.message}` });
+        console.error(" Error Processing  File:", error);
+        res.status(500).json({ message: ` Error Processing File: ${error.message}` });
     }
 };
 
@@ -109,22 +109,22 @@ const createquestion = async (req, res) => {
             };
         }));
 
-        // ✅ MongoDB me `insertMany()` se batch insert
+     
         await questionData.insertMany(questions);
 
         fs.unlink(filePath, (err) => {
-            if (err) console.error("❌ Error deleting file:", err);
-            else console.log("✅ File deleted:", filePath);
+            if (err) console.error(" Error deleting file:", err);
+            else console.log("File deleted:", filePath);
         });
 
         res.status(200).json({ message: "✅ Excel File Processed & Data Inserted" });
     } catch (error) {
         fs.unlink(filePath, (err) => {
-            if (err) console.error("❌ Error deleting file:", err);
-            else console.log("✅ File deleted:", filePath);
+            if (err) console.error(" Error deleting file:", err);
+            else console.log(" File deleted:", filePath);
         });
-        console.error("❌ Error Processing Excel File:", error);
-        res.status(500).json({ message: `❌ Error Processing Excel File: ${error.message}` });
+        console.error(" Error Processing Excel File:", error);
+        res.status(500).json({ message: `Error Processing Excel File: ${error.message}` });
     }
 };
 
@@ -132,7 +132,7 @@ const createquestion = async (req, res) => {
 const createQuestionbyself = async (req, res) => {
     try {
         const {
-            categoryName, // Category name from request body
+            categoryId ,
             questionType,
             text,
             media,
@@ -142,14 +142,10 @@ const createQuestionbyself = async (req, res) => {
         } = req.body;
 
        
-        const category = await categoryData.findOne({ name: categoryName });
-        if (!category) {
-            return res.status(404).json({ message: "Category not found!" });
-        }
-
+     
      
         const newQuestion = new questionData({
-            category: category._id,  
+            category: categoryId,  
             questionType,
             text,
             media,
@@ -267,7 +263,7 @@ const deletequetion = async (req, res) => {
     try {
         const {
             _id,  
-            categoryName,
+            categoryId,
             questionType,
             text,
             media,
@@ -276,23 +272,15 @@ const deletequetion = async (req, res) => {
             ageRange
         } = req.body;
 
-        if (!_id) {
-            return res.status(400).json({ message: 'ID is required' });
+        if (!_id || !categoryId) {
+            return res.status(400).json({ message: 'Question ID and Category ID are required' });
         }
-
      
-        const category = await categoryData.findOne({ name: categoryName });
-
-     
-        if (!category) {
-            return res.status(404).json({ message: 'Category not found' });
-        }
-
     
         const updatedquestion = await questionData.findByIdAndUpdate(
             _id,
             {  
-                category: category._id, 
+                category: categoryId, 
                 questionType,
                 text,
                 media,

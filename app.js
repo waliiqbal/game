@@ -9,7 +9,7 @@ const port = 3002;
 
 app.use(cors({
   origin: "*",  // Allows all domains (for testing, not recommended for production)
-  methods: ["GET", "POST", "PUT", "DELETE"],
+  methods: ["GET", "POST", "PUT", "DELETE","PATCH",],
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
