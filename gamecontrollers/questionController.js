@@ -171,39 +171,40 @@ const createQuestionbyself = async (req, res) => {
 
 const getQuestions = async (req, res) => {
     try {
-        const { categoryId, questionType, ageRange, page = 1, limit = 10 } = req.query;
+        const { categoryId, questionType, ageRange, limit = 10, cursor } = req.query;
 
-        
         const category = await categoryData.findOne({ _id: categoryId });
         if (!category) {
             return res.status(404).json({ message: "Category not found!" });
         }
 
-        
         let query = { category: category._id };
         if (questionType) query.questionType = questionType;
         if (ageRange) query.ageRange = ageRange;
-
         
-        const pageNumber = parseInt(page, 10);
+
+        if (cursor) {
+            query._id = { $gt: cursor }; 
+        }
+
+    
         const limitNumber = parseInt(limit, 10);
-        const skip = (pageNumber - 1) * limitNumber;
-
-     
-        const totalQuestions = await questionData.countDocuments(query);
-
-        
         const questions = await questionData.find(query)
-            .skip(skip)
+            .sort({ _id: 1 })  
             .limit(limitNumber);
+
+
+       let nextCursor = null; 
+
+  if (questions.length > 0) {
+    nextCursor = questions[questions.length - 1]._id;
+   }
 
         res.status(200).json({
             message: "Questions fetched successfully",
-            totalQuestions,
-            totalPages: Math.ceil(totalQuestions / limitNumber),
-            currentPage: pageNumber,
+            totalQuestions: await questionData.countDocuments(query),
             data: questions,
-            categoryName: category?.name
+            nextCursor: nextCursor  
         });
 
     } catch (error) {
@@ -211,7 +212,6 @@ const getQuestions = async (req, res) => {
         res.status(500).json({ message: "Error fetching questions" });
     }
 };
-
 const getquestionbyId = async (req, res) => {
     try {
     
