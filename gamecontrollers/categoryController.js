@@ -30,6 +30,48 @@ const createcategory = async (req, res) => {
   }
 };
 
+const getCategories = async (req, res) => {
+  try {
+      const { name, limit = 10, cursor } = req.query;
+      const filter = {};
+
+      if (name) {
+          filter.name = { $regex: new RegExp(name, "i") }; 
+      }
+
+      let query = filter;
+
+      if (cursor) {
+          query._id = { $gt: cursor }; 
+      }
+
+      const limitNumber = parseInt(limit, 10);
+      
+      const categories = await categoryData.find(query)
+          .sort({ _id: 1 })  
+          .limit(limitNumber);
+
+      let nextCursor = null; 
+
+      if (categories.length > 0) {
+          nextCursor = categories[categories.length - 1]._id;
+      }
+
+      const totalCategories = await categoryData.countDocuments(filter);
+
+      res.status(200).json({
+          message: "Categories fetched successfully!",
+          totalCategories,
+          data: categories,
+          nextCursor: nextCursor
+      });
+
+  } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Error fetching categories", error });
+  }
+};
+
 const deletecategory = async (req, res) => {
     try {
     
@@ -69,37 +111,45 @@ const deletecategory = async (req, res) => {
     }
 };
 
-const getCategories = async (req, res) => {
-  try {
-      const { name, page = 1, limit = 10 } = req.query; // Query parameters
+
+const getCategoriesforgame = async (req, res) => {
+    try {
+      const { page = 1, limit = 10, name } = req.query;
       const filter = {};
-
-    
+  
       if (name) {
-          filter.name = { $regex: new RegExp(name, "i") }; 
+        filter.name = name;
       }
-
- 
+  
       const categories = await categoryData
-          .find(filter)
-          .skip((page - 1) * limit) 
-          .limit(Number(limit)); 
-
+        .find(filter)
+        .skip((page - 1) * limit)
+        .limit(Number(limit));
+  
       const totalCategories = await categoryData.countDocuments(filter);
-
+  
       res.status(200).json({
-          message: "Categories fetched successfully!",
-          total: totalCategories,
-          page: Number(page),
-          limit: Number(limit),
-          data: categories,
+        data: categories.map(category => ({
+          categoryName: category.name,
+          categoryId: category._id
+        })),
+        mesg: "Categories fetched successfully!",
+        error: "",
+        total: totalCategories,
+        page: Number(page),
+        limit: Number(limit),
       });
-  } catch (error) {
+  
+    } catch (error) {
       console.error(error);
-      res.status(500).json({ message: "Error fetching categories", error });
-  }
-};
-
+      res.status(500).json({
+        data: [],
+        mesg: "Error fetching categories",
+        error: error.message,
+      });
+    }
+  };
+  
 const getcategorybyId = async (req, res) => {
     try {
     
@@ -121,6 +171,6 @@ const getcategorybyId = async (req, res) => {
   };
   
 
-  export {createcategory, deletecategory, editCategory, getCategories, getcategorybyId }
+  export {createcategory, deletecategory, editCategory, getCategories, getcategorybyId, getCategoriesforgame }
 
 

@@ -2,6 +2,7 @@ import { model } from 'mongoose';
 import xlsx from "xlsx";
 const { readFile, utils } = xlsx;
 import fs from 'fs';
+;
 
 
 
@@ -139,6 +140,7 @@ const createQuestionbyself = async (req, res) => {
             options,
             correctAnswer,
             ageRange
+            
         } = req.body;
 
        
@@ -204,7 +206,8 @@ const getQuestions = async (req, res) => {
             message: "Questions fetched successfully",
             totalQuestions: await questionData.countDocuments(query),
             data: questions,
-            nextCursor: nextCursor  
+            nextCursor: nextCursor,
+            categoryName: category.name,  
         });
 
     } catch (error) {
@@ -309,10 +312,67 @@ const getAge = (req, res) => {
     });
 };
 
+const getQuestionforgame = async (req, res) => {
+    try {
+        const { categoryId, language } = req.query;
+
+        if (!categoryId) {
+            return res.status(400).json({ message: "categoryId is required!" });
+        }
+
+       
+        const category = await categoryData.findOne({ _id: categoryId });
+        if (!category) {
+            return res.status(404).json({ message: "Category not found!" });
+        }
+
+        let query = { category: category._id, isShow: false };
+        if (language) query.language = language;
+
+      
+        let remainingQuestions = await questionData.countDocuments(query);
+
+      
+        if (remainingQuestions === 0) {
+            await questionData.updateMany({ category: category._id }, { $set: { isShow: false } });
+
+         
+            remainingQuestions = await questionData.countDocuments(query);
+        }
+
+      
+        let question = await questionData.aggregate([
+            { $match: query },
+            { $sample: { size: 1 } }
+        ]);
+
+     
+        if (question.length > 0) {
+            await questionData.updateOne({ _id: question[0]._id }, { $set: { isShow: true } });
+        }
+
+        res.status(200).json({
+            message: "Question fetched successfully",
+            data: question.length > 0 ? question[0] : null,
+           
+        });
+
+    } catch (error) {
+        res.status(500).json({
+          data: {},
+          mesg: 'Failed to create user',
+          error: error.message, 
+        });
+      }
+};
 
 
 
-  export { createquestion, getAge, uploadFile, createQuestionbyself, deletequetion, Editquestion, getQuestions, getquestionbyId, createMeme, getMeme };
+
+
+
+
+  export { createquestion, getAge, uploadFile, createQuestionbyself, deletequetion, Editquestion, getQuestions, getquestionbyId, createMeme, getMeme, getQuestionforgame  };
 
 
 
