@@ -242,12 +242,12 @@ const deletequetion = async (req, res) => {
       const { _id } = req.params;
   
     
-      if (!id) {
+      if (!_id) {
         return res.status(400).json({ error: 'question ID is required' });
       }
   
   
-      const deletedquestion = await questionData.findByIdAndDelete(_id);
+      const deletedquestion = await questionData.deleteOne({_id: _id});
   
      
       if (!deletedquestion) {
@@ -263,6 +263,8 @@ const deletequetion = async (req, res) => {
   };
   
   const Editquestion = async (req, res) => {
+
+
     try {
         const {
             _id,  
@@ -279,7 +281,6 @@ const deletequetion = async (req, res) => {
             return res.status(400).json({ message: 'Question ID and Category ID are required' });
         }
      
-    
         const updatedquestion = await questionData.findByIdAndUpdate(
             _id,
             {  
@@ -293,9 +294,14 @@ const deletequetion = async (req, res) => {
             },
             { new: true, runValidators: true }
         );
+        if(!updatedquestion){
+            return res.status(400).json({ message: 'error' });
+ 
+        }
 
+      
 
-        res.status(200).json({ message: 'Question updated successfully', data: updatedquestion });
+        res.status(200).json({ message: 'Question updated successfully', data: updatedquestion  });
 
     } catch (error) {
         console.error("Error:", error);
