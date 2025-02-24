@@ -7,6 +7,7 @@ import { createquestion, uploadFile, getAge, createQuestionbyself, deletequetion
 
  import { createcategory, deletecategory, editCategory, getCategories, getcategorybyId, getCategoriesforgame } from "../gamecontrollers/categoryController.js";
  import { registration} from "../gamecontrollers/userController.js";
+ import { startGame,roundEnd, getMiniGames, getResult} from "../gamecontrollers/gaamecontroller.js";
  import upload from "../MiddleWear/multer.js"; // Adjust path as needed
  import uploadCloudnart from "../MiddleWear/multerCloudnary.js";
 
@@ -54,6 +55,13 @@ http.get("/gameApp/getcategorybyId/:_id", getcategorybyId);
 
 //userroutes
 http.post("/gameApp/registration", registration);
+
+
+// gameRoutes
+http.post("/gameApp/startGame", startGame);
+http.post("/gameApp/roundEnd", roundEnd);
+http.get("/gameApp/getMiniGames", getMiniGames);
+http.get("/gameApp/getResult", getResult);
 
 }
 

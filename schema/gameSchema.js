@@ -1,16 +1,24 @@
+import mongoose from "mongoose";
 import { Schema, model } from "mongoose";
+
+
+
 
 const gameSchema = new Schema(
   {
-    userId: { type: String  },
-    categoryId: { type: String  },
-    userId: { type: String  },
-    questionId: { type: String},
-    Answers: { type: String},
-    score : { type: Number },
-    isWinner: { type: Boolean },
+    users: [{ type: mongoose.Schema.Types.ObjectId, ref: "user" }], 
+
+    rounds: [
+      {
+        category: { type: mongoose.Schema.Types.ObjectId, ref: "category", required: false }, 
+        miniGame: {type: String, required : false},
+        user: { type: mongoose.Schema.Types.ObjectId, ref: "user" },
+        score: { type: Number, required: true , required: false }
+      }
+    ]
   },
   { timestamps: true }
 );
+
 
 export { gameSchema }; 

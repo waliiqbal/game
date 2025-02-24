@@ -129,12 +129,12 @@ const getCategoriesforgame = async (req, res) => {
       const totalCategories = await categoryData.countDocuments(filter);
   
       res.status(200).json({
+        success: true,
+        message: "Categories fetched successfully!",
         data: categories.map(category => ({
           categoryName: category.name,
           categoryId: category._id
         })),
-        mesg: "Categories fetched successfully!",
-        error: "",
         total: totalCategories,
         page: Number(page),
         limit: Number(limit),
@@ -143,8 +143,8 @@ const getCategoriesforgame = async (req, res) => {
     } catch (error) {
       console.error(error);
       res.status(500).json({
-        data: [],
-        mesg: "Error fetching categories",
+        success: false,
+        message: "Error fetching categories",
         error: error.message,
       });
     }

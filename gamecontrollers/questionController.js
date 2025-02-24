@@ -358,6 +358,7 @@ const getQuestionforgame = async (req, res) => {
         }
 
         res.status(200).json({
+            success: true,
             message: "Question fetched successfully",
             data: question.length > 0 ? question[0] : null,
            
@@ -365,8 +366,8 @@ const getQuestionforgame = async (req, res) => {
 
     } catch (error) {
         res.status(500).json({
-          data: {},
-          mesg: 'Failed to create user',
+          success: false,
+          message: 'Failed to create user',
           error: error.message, 
         });
       }
