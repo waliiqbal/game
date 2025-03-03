@@ -66,6 +66,65 @@ const getMeme = async (req, res) => {
         res.status(500).json({ message: ` Error Fetching Meme: ${error.message}` });
     }
 };
+const getMemesForAdmin = async (req, res) => {
+    try {
+        const { limit = 10, cursor } = req.query;
+
+        let query = {};
+        if (cursor) {
+            query._id = { $gt: cursor }; 
+        }
+
+        const limitNumber = parseInt(limit, 10);
+
+       
+        const memes = await memeData
+            .find(query)
+            .sort({ _id: 1 }) 
+            .limit(limitNumber);
+
+ 
+        let nextCursor = null;
+        if (memes.length > 0) {
+            nextCursor = memes[memes.length - 1]._id; 
+        }
+
+        res.status(200).json({
+            message: "Memes fetched successfully",
+            totalMemes: await memeData.countDocuments(),
+            data: memes,
+            nextCursor: nextCursor, 
+        });
+
+    } catch (error) {
+        console.error("Error Fetching Memes:", error);
+        res.status(500).json({ message: "Error Fetching Memes" });
+    }
+};
+
+const deleteMeme = async (req, res) => {
+    try {
+        const { _id } = req.params; 
+
+        if (!_id) {
+            return res.status(400).json({ error: "Meme ID is required" });
+        }
+
+        const deletedMeme = await memeData.deleteOne({ _id: _id });
+
+        if (!deletedMeme) {
+            return res.status(404).json({ error: "Meme not found" });
+        }
+
+        res.status(200).json({ message: "Meme deleted successfully", data: deletedMeme });
+    } catch (error) {
+        console.error("Error deleting meme:", error);
+        res.status(500).json({ error: "Error deleting meme" });
+    }
+};
+
+
+ 
 const createquestion = async (req, res) => {
     const filePath = req.file.path; 
 
@@ -74,7 +133,7 @@ const createquestion = async (req, res) => {
         
         
         const workbook = readFile(filePath);
-        const sheetName = workbook.SheetNames[0]; // ✅ Pehli sheet select karna
+        const sheetName = workbook.SheetNames[0]; 
         const jsonData = utils.sheet_to_json(workbook.Sheets[sheetName]);
 
         console.log("✅ Excel Data Processed:", jsonData);
@@ -379,7 +438,7 @@ const getQuestionforgame = async (req, res) => {
 
 
 
-  export { createquestion, getAge, uploadFile, createQuestionbyself, deletequetion, Editquestion, getQuestions, getquestionbyId, createMeme, getMeme, getQuestionforgame  };
+  export { createquestion, getAge, uploadFile, createQuestionbyself, deletequetion, Editquestion, getQuestions, getquestionbyId, createMeme, getMeme,getMemesForAdmin, deleteMeme, getQuestionforgame  };
 
 
 
