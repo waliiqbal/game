@@ -10,10 +10,10 @@ dotenv.config();
 
  const registration = async (req, res) => {
     try {
-      const { name, age, language, phone } = req.body;
+      const { name, age, language, phone, profilePicture } = req.body;
   
       
-      const newUser = new userData({ name, age, language, phone });
+      const newUser = new userData({ name, age, language, phone, profilePicture });
       await newUser.save();
   
 

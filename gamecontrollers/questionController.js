@@ -38,17 +38,25 @@ const uploadFile = async (req, res) => {
 const createMeme = async (req, res) => {
     try {
         const filePath = req.file.path;
-        console.log(" Uploaded File Path:", filePath);
+        console.log("Uploaded File Path:", filePath);
 
-        const meme = new memeData({ name: filePath });
+        const { memeType } = req.body;
+        const allowedTypes = ["WIN", "LOSE", "WAITING", "MINIGAME"];
+
+        if (!allowedTypes.includes(memeType)) {
+            return res.status(400).json({ message: "Invalid memeType. Allowed values: WIN, LOSE, WAITING, MINIGAME" });
+        }
+
+        const meme = new memeData({ name: filePath, memeType });
         await meme.save();
 
-        res.status(200).json({ url: filePath, message: " File Uploaded & Saved in Database" });
+        res.status(200).json({ url: filePath, message: "Successfully Saved" });
     } catch (error) {
-        console.error(" Error Uploading File:", error);
-        res.status(500).json({ message: ` Error Uploading File: ${error.message}` });
+        console.error("Error Uploading File:", error);
+        res.status(500).json({ message: `Error In Uploading Meme: ${error.message}` });
     }
 };
+
 
 const getMeme = async (req, res) => {
     try {

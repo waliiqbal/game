@@ -29,7 +29,7 @@ http.post("/gameApp/upload", uploadCloudnart.single("file"), uploadFile);
 http.post("/gameApp/createMeme", uploadCloudnart.single("file"), createMeme);
 http.get("/gameApp/getMeme", getMeme);
 http.get("/gameApp/getAge", getAge);
-http.get("/gameApp/getMemesForAdmin", getMemesForAdmin)
+http.get("/gameApp/getMemesForAdmin", getMemesForAdmin);
 http.delete("/gameApp/deleteMeme/:_id", deleteMeme);
 
 http.post("/gameApp/createquestion", upload.single("file"), createquestion);

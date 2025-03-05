@@ -9,13 +9,17 @@ const storage = new CloudinaryStorage({
     let format;
     const mimeType = file.mimetype.split("/")[0]; // Get the type (image, video, audio)
 
-    // Allow images, videos, and audio files
+    let resourceType = "auto"; // Default "auto" to let Cloudinary decide
+
     if (mimeType === "image") {
-      format = file.mimetype.split("/")[1]; // Keep original format (png, jpg, gif, etc.)
+      format = file.mimetype.split("/")[1]; // Keep original format (png, jpg, etc.)
+      resourceType = "image"; // Explicitly set for images
     } else if (mimeType === "video") {
       format = "mp4"; // Convert all videos to MP4
+      resourceType = "video"; // Explicitly set for videos
     } else if (mimeType === "audio") {
       format = "mp3"; // Convert all audio files to MP3
+      resourceType = "auto"; // Let Cloudinary decide
     } else {
       throw new Error("Unsupported file type"); // Reject unsupported files
     }
@@ -23,7 +27,7 @@ const storage = new CloudinaryStorage({
     return {
       folder: "uploads", // Cloudinary folder
       format: format, // Set format dynamically
-      resource_type: mimeType, // Set correct resource type (image, video, audio)
+      resource_type: resourceType, // Correct resource type
       public_id: Date.now() + "-" + path.parse(file.originalname).name, // Remove extension
     };
   },
