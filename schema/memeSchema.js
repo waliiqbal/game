@@ -2,9 +2,15 @@ import { Schema, model } from "mongoose";
 
 const memeSchema = new Schema(
   {
-    name: { type: String,  },
+    name: { type: String },
+    memeType: {
+      type: String,
+      enum: ["WIN", "LOSE", "WAITING", "MINIGAME"], // Allowed values
+      required: true, // Ensure memeType is always provided
+    },
   },
   { timestamps: true }
 );
 
-export { memeSchema }; 
+export { memeSchema };
+

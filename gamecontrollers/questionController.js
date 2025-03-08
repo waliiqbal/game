@@ -57,6 +57,15 @@ const createMeme = async (req, res) => {
     }
 };
 
+const getMemesType = (req, res) => {
+          let memeType = ["WIN", "LOSE", "WAITING", "MINIGAME" ];
+      
+          res.status(200).json({
+              message: "miniGame fetched successfully",
+              data: memeType
+          });
+      };
+
 
 const getMeme = async (req, res) => {
     try {
