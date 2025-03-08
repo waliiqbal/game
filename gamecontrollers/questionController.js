@@ -455,7 +455,7 @@ const getQuestionforgame = async (req, res) => {
 
 
 
-  export { createquestion, getAge, uploadFile, createQuestionbyself, deletequetion, Editquestion, getQuestions, getquestionbyId, createMeme, getMeme,getMemesForAdmin, deleteMeme, getQuestionforgame  };
+  export { createquestion, getAge, uploadFile, createQuestionbyself, deletequetion, Editquestion, getQuestions, getquestionbyId, createMeme, getMemesType, getMeme,getMemesForAdmin, deleteMeme, getQuestionforgame  };
 
 
 
