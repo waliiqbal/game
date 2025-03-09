@@ -67,27 +67,65 @@ const getMemesType = (req, res) => {
       };
 
 
+// const getMeme = async (req, res) => {
+//     try {
+        
+//         const { memeType } = req.query;
+
+//         let query = {};
+//         if(memeType){
+//             query.memeType = memeType;
+//         }
+        
+//         const count = await memeData.countDocuments(query);
+//         if (count === 0) {
+//             return res.status(404).json({ message: " No memes found" });
+//         }
+
+//         const randomIndex = Math.floor(Math.random() * count);
+//         const randomMeme = await memeData.findOne(query).skip(randomIndex);
+
+//         res.status(200).json({ data: randomMeme });
+//     } catch (error) {
+//         console.error(" Error Fetching Meme:", error);
+//         res.status(500).json({ message: ` Error Fetching Meme: ${error.message}` });
+//     }
+// };
 const getMeme = async (req, res) => {
     try {
-        const count = await memeData.countDocuments();
-        if (count === 0) {
-            return res.status(404).json({ message: " No memes found" });
-        }
-
-        const randomIndex = Math.floor(Math.random() * count);
-        const randomMeme = await memeData.findOne().skip(randomIndex);
-
-        res.status(200).json({ data: randomMeme });
-    } catch (error) {
-        console.error(" Error Fetching Meme:", error);
-        res.status(500).json({ message: ` Error Fetching Meme: ${error.message}` });
-    }
-};
-const getMemesForAdmin = async (req, res) => {
-    try {
-        const { limit = 10, cursor } = req.query;
+        const { memeType } = req.query;
 
         let query = {};
+        if (memeType) {
+            query.memeType = memeType;
+        }
+
+        // Use aggregation with $match and $sample for better performance
+        const randomMeme = await memeData.aggregate([
+            { $match: query },  // Filter by memeType if provided
+            { $sample: { size: 1 } }  // Fetch one random document
+        ]);
+
+        if (randomMeme.length === 0) {
+            return res.status(404).json({ message: "No memes found" });
+        }
+
+        res.status(200).json({ data: randomMeme[0] });
+
+    } catch (error) {
+        console.error("Error Fetching Meme:", error);
+        res.status(500).json({ message: `Error Fetching Meme: ${error.message}` });
+    }
+};
+
+const getMemesForAdmin = async (req, res) => {
+    try {
+        const { limit = 10, cursor, memeType } = req.query;
+
+        let query = {};
+        if(memeType){
+            query.memeType = memeType;
+        }
         if (cursor) {
             query._id = { $gt: cursor }; 
         }
