@@ -3,9 +3,12 @@ import { Schema, model } from "mongoose";
 const categorySchema = new Schema(
   {
     name: { type: String, required: true },
-    rules: { type: String },
+    rules: { type: String, required: false },
     icon: { type: String },
-    animation: { type: String },
+    rulesIntro: {
+      english: { type: String }, 
+      arabic: { type: String }   
+    },
     background: { type: String },
   },
   { timestamps: true }

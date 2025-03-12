@@ -8,25 +8,32 @@ const categoryData = model('category', categorySchema);
 
 const createcategory = async (req, res) => {
   try {
-  
-      const newCategory = new categoryData({
-          name: req.body.name,
-          rules: req.body.rules,
-          icon: req.body.icon,
-          animation: req.body.animation,
-          background: req.body.background
-      });
+    const { name, rules, icon, rulesIntro, background } = req.body;
 
-      await newCategory.save();
+    if (!name) {
+      return res.status(400).json({ error: "Category name is required" });
+    }
 
-     
-      res.status(201).json({
-          message: 'Category created successfully!',
-          data: newCategory  
-      });
+    const newCategory = new categoryData({
+      name,
+      rules,
+      icon,
+      rulesIntro: {
+        english: rulesIntro?.english || "",
+        arabic: rulesIntro?.arabic || ""
+      },
+      background
+    });
+
+    await newCategory.save();
+
+    res.status(201).json({
+      message: "Category created successfully!",
+      data: newCategory
+    });
+
   } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Error creating category', error });
+    res.status(500).json({ message: "Error creating category", error });
   }
 };
 
@@ -82,7 +89,7 @@ const deletecategory = async (req, res) => {
         return res.status(400).json({ error: 'category ID is required' });
     }
   
-      const deletedcategory = await categoryData.findByIdAndDelete(_id);
+      const deletedcategory = await categoryData.deleteOne({_id: _id});;
   
       res.status(200).json({ message: 'category deleted successfully', data: deletedcategory });
     } catch (error) {
@@ -93,16 +100,25 @@ const deletecategory = async (req, res) => {
 
   const editCategory = async (req, res) => {
     try {
-        const { name, rules, icon, animation, background, _id } = req.body;
+        const { name, rules, icon, rulesIntro, background, _id } = req.body;
 
         if (!_id) {
             return res.status(400).json({ error: 'Category ID is required' });
         }
 
         const updatedCategory = await categoryData.findByIdAndUpdate(
-            _id,
-            { name, rules, icon, animation, background },
-            { new: true, runValidators: true }
+          _id,
+          {
+            name,
+            rules,
+            icon,
+            rulesIntro: {
+              english: rulesIntro?.english || "",
+              arabic: rulesIntro?.arabic || ""
+            },
+            background
+          },
+          { new: true, runValidators: true }
         );
 
         res.status(200).json({ message: 'Category updated successfully', data: updatedCategory });
