@@ -204,6 +204,10 @@ const createquestion = async (req, res) => {
             if (!category) {
                 return ;
             }
+
+            const ageRangeArray = row.age_range 
+            ? row.age_range.split(',').map(item => item.trim().replace(/"/g, '')) 
+            : [];
             
             return {
                 category: category._id,  
@@ -220,11 +224,11 @@ const createquestion = async (req, res) => {
                     D: { ar: row.option_ar_d || "", en: row.option_en_d || "" }
                 },
                 correctAnswer: row.answer,
-                ageRange: row.age_range
+                ageRange: ageRangeArray
             };
         }));
 
-     
+        // const validQuestions = questions.filter(q => q);
         await questionData.insertMany(questions);
 
         fs.unlink(filePath, (err) => {
@@ -424,7 +428,7 @@ const deletequetion = async (req, res) => {
 };
 
 const getAge = (req, res) => {
-    let age = ["6-12", "13-18", "19-30", "31-45", "45 Above"  ];
+    let age = ["All", "Kids", "Normal", "Hard"  ];
 
     res.status(200).json({
         message: "Age fetched successfully",
@@ -434,7 +438,7 @@ const getAge = (req, res) => {
 
 const getQuestionforgame = async (req, res) => {
     try {
-        const { categoryId, language } = req.query;
+        const { categoryId, language, ageRange } = req.query;
 
         if (!categoryId) {
             return res.status(400).json({ message: "categoryId is required!" });
@@ -448,6 +452,10 @@ const getQuestionforgame = async (req, res) => {
 
         let query = { category: category._id, isShow: false };
         if (language) query.language = language;
+
+        if (ageRange) {
+            query.ageRange = { $in: ageRange };
+        }
 
       
         let remainingQuestions = await questionData.countDocuments(query);

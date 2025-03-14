@@ -44,9 +44,10 @@ const questionSchema = new Schema({
     },
     
     ageRange: { 
-        type: String, 
-        required: true,
-      },
+      type: [String], 
+      required: true
+    },
+  
 
     isShow: { 
       type: Boolean, 
