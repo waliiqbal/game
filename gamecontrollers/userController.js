@@ -30,10 +30,11 @@ dotenv.config();
           age: newUser.age,
           language: newUser.language,
           phone: newUser.phone,
+          profilePicture:  newUser.profilePicture,
           token: accessToken, 
         },
         mesg: 'User created successfully',
-        error: '',
+        
       });
     } catch (error) {
       res.status(500).json({
