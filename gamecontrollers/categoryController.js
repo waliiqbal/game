@@ -149,7 +149,8 @@ const getCategoriesforgame = async (req, res) => {
         message: "Categories fetched successfully!",
         data: categories.map(category => ({
           categoryName: category.name,
-          categoryId: category._id
+          categoryId: category._id,
+          categoryIcon: category.icon
         })),
         total: totalCategories,
         page: Number(page),
