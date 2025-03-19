@@ -23,7 +23,7 @@ try {
 
 const getRound = async (req, res) => {
   try {
-    const rounds = await roundData.find();
+    const rounds = await roundData.findOne({});
 
     if (rounds.length === 0) {
       return res.status(404).json({ message: "No rounds found" });
@@ -39,11 +39,11 @@ const getRound = async (req, res) => {
 };
 
 const updateRound = async (req, res) => {
-  const { isManual, roundOrder, roundSettings } = req.body;
+  const { isManual, roundOrder, roundSettings, _id } = req.body;
 
   try {
     const updatedRound = await roundData.findOneAndUpdate(
-      {}, 
+      {_id: _id}, 
       { isManual, roundOrder, roundSettings }, 
       { new: true, upsert: true } 
     );
