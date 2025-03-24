@@ -90,7 +90,13 @@ const startGame = async (req, res) => {
         };
 
         const getMiniGames = (req, res) => {
-          let miniGame = ["MinigameA", "MinigameB", "MinigameC", ];
+          let miniGame = [
+            "Guess the Password",
+            "Spot the Difference",
+            "True or Not True",
+            "Rearrange Letters",
+            "Guess and Press"
+        ];
       
           res.status(200).json({
               message: "miniGame fetched successfully",
