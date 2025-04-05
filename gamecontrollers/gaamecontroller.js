@@ -95,7 +95,9 @@ const startGame = async (req, res) => {
             "Spot the Difference",
             "True or Not True",
             "Rearrange Letters",
-            "Guess and Press"
+            "Guess and Press",
+            "Memory light sequence"
+          
         ];
       
           res.status(200).json({

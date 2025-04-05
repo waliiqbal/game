@@ -3,7 +3,7 @@ import jwtAuthMiddleware from '../MiddleWear/jwt.js';
 import jwt from 'jsonwebtoken';
 
 
-import { createquestion, uploadFile, getAge, createQuestionbyself, deletequetion, Editquestion, getQuestions, getquestionbyId, createMeme, getMemesType, getMeme, getMemesForAdmin,deleteMeme, getQuestionforgame } from "../gamecontrollers/questionController.js";
+import { createquestion, uploadFile, getAge, createQuestionbyself, deletequetion, Editquestion, getQuestions, getquestionbyId, createMeme, getMemesType, getMeme, getMemesForAdmin,deleteMeme, getQuestionforgame , exportCategoryQuestions } from "../gamecontrollers/questionController.js";
 
  import { createcategory, deletecategory, editCategory, getCategories, getcategorybyId, getCategoriesforgame } from "../gamecontrollers/categoryController.js";
  import { registration} from "../gamecontrollers/userController.js";
@@ -38,6 +38,8 @@ http.delete("/gameApp/deleteMeme/:_id", deleteMeme);
 
 http.post("/gameApp/createquestion", upload.single("file"), createquestion);
 http.post("/gameApp/createQuestionbyself", createQuestionbyself);
+http.post("/gameApp/exportCategoryQuestions", exportCategoryQuestions);
+
 http.get("/gameApp/getQuestions", getQuestions);
 http.get("/gameApp/getQuestionforgame", getQuestionforgame);
 
