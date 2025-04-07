@@ -1,6 +1,7 @@
 import cors from "cors";
 import jwtAuthMiddleware from '../MiddleWear/jwt.js'; 
 import jwt from 'jsonwebtoken';
+import { upload } from '../MiddleWear/uploadS3.js';
 
 
 import { createquestion, uploadFile, getAge, createQuestionbyself, deletequetion, Editquestion, getQuestions, getquestionbyId, createMeme, getMemesType, getMeme, getMemesForAdmin,deleteMeme, getQuestionforgame , exportCategoryQuestions } from "../gamecontrollers/questionController.js";
@@ -11,7 +12,7 @@ import { createquestion, uploadFile, getAge, createQuestionbyself, deletequetion
   
  import { createRound, getRound, updateRound } from "../gamecontrollers/roundController.js";
 
- import upload from "../MiddleWear/multer.js"; // Adjust path as needed
+ import uploadSheet from "../MiddleWear/multer.js"; // Adjust path as needed
  import uploadCloudnart from "../MiddleWear/multerCloudnary.js";
 
 
@@ -28,15 +29,15 @@ const CustomRoutes = (http, express) => {
   http.use(express.json());
   
 // question routes 
-http.post("/gameApp/upload", uploadCloudnart.single("file"), uploadFile);
-http.post("/gameApp/createMeme", uploadCloudnart.single("file"), createMeme);
+http.post("/gameApp/upload", upload.single('file'), uploadFile);
+http.post("/gameApp/createMeme", upload.single('file'), createMeme);
 http.get("/gameApp/getMemesType", getMemesType);
 http.get("/gameApp/getMeme", getMeme);
 http.get("/gameApp/getAge", getAge);
 http.get("/gameApp/getMemesForAdmin", getMemesForAdmin);
 http.delete("/gameApp/deleteMeme/:_id", deleteMeme);
 
-http.post("/gameApp/createquestion", upload.single("file"), createquestion);
+http.post("/gameApp/createquestion", uploadSheet.single("file"), createquestion);
 http.post("/gameApp/createQuestionbyself", createQuestionbyself);
 http.post("/gameApp/exportCategoryQuestions", exportCategoryQuestions);
 

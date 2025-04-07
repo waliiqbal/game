@@ -3,6 +3,7 @@ import xlsx from "xlsx";
 const { readFile, utils } = xlsx;
 import fs from 'fs';
 import ExcelJS from 'exceljs';
+import { uploadToS3 } from '../MiddleWear/uploadS3.js';
 
 
 
@@ -26,10 +27,10 @@ const uploadFile = async (req, res) => {
     try {
       
         const filePath = req.file.path;
-        
+        const s3Url = await uploadToS3(req.file); 
         console.log("lokout",filePath);
 
-        res.status(200).json({ url: filePath, message: " File Processed & Data Inserted" });
+        res.status(200).json({ url: s3Url, message: " File Processed & Data Inserted" });
     } catch (error) {
         console.error(" Error Processing  File:", error);
         res.status(500).json({ message: ` Error Processing File: ${error.message}` });
@@ -47,11 +48,11 @@ const createMeme = async (req, res) => {
         if (!allowedTypes.includes(memeType)) {
             return res.status(400).json({ message: "Invalid memeType. Allowed values: WIN, LOSE, WAITING, MINIGAME" });
         }
-
-        const meme = new memeData({ name: filePath, memeType });
+        const s3Url = await uploadToS3(req.file);
+        const meme = new memeData({ name: s3Url, memeType });
         await meme.save();
 
-        res.status(200).json({ url: filePath, message: "Successfully Saved" });
+        res.status(200).json({ url: s3Url, message: "Successfully Saved" });
     } catch (error) {
         console.error("Error Uploading File:", error);
         res.status(500).json({ message: `Error In Uploading Meme: ${error.message}` });
