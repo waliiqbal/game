@@ -201,9 +201,11 @@ const createquestion = async (req, res) => {
             const categoryName = row.category;
 
            
-            let category = await categoryData.findOne({ name: categoryName });
+             let category = await categoryData.findOne({ name: { $regex: new RegExp(`^${categoryName}$`, 'i') } });
+            
 
             if (!category) {
+                console.log("category not found")
                 return ;
             }
 
@@ -225,13 +227,13 @@ const createquestion = async (req, res) => {
                     C: { ar: row.option_ar_c || "", en: row.option_en_c || "" },
                     D: { ar: row.option_ar_d || "", en: row.option_en_d || "" }
                 },
-                correctAnswer: row.answer,
+                correctAnswer: row.answer.toUpperCase(),
                 ageRange: ageRangeArray
             };
         }));
 
-        // const validQuestions = questions.filter(q => q);
-        await questionData.insertMany(questions);
+         const validQuestion = questions.filter(q => q !== null && q !== undefined);
+        await questionData.insertMany (validQuestion);
 
         fs.unlink(filePath, (err) => {
             if (err) console.error(" Error deleting file:", err);
