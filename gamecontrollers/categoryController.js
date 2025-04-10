@@ -153,6 +153,7 @@ const getCategoriesforgame = async (req, res) => {
         message: "Categories fetched successfully!",
         data: categories.map(category => ({
           categoryName: category.name,
+          categoryNameAR: category?.nameAR || "",
           categoryId: category._id,
           categoryIcon: category.icon
         })),
