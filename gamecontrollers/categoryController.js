@@ -102,7 +102,7 @@ const deletecategory = async (req, res) => {
 
   const editCategory = async (req, res) => {
     try {
-        const { name, rules, icon, rulesIntro, background, _id } = req.body;
+        const { name, nameAR, rules, rulesAR, icon, rulesIntro, background, _id } = req.body;
 
         if (!_id) {
             return res.status(400).json({ error: 'Category ID is required' });
@@ -112,7 +112,9 @@ const deletecategory = async (req, res) => {
           _id,
           {
             name,
+            nameAR,
             rules,
+            rulesAR,
             icon,
             rulesIntro: {
               english: rulesIntro?.english || "",
