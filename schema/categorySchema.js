@@ -4,6 +4,8 @@ const categorySchema = new Schema(
   {
     name: { type: String, required: true },
     rules: { type: String, required: false },
+    nameAR: { type: String, required: false },
+    rulesAR: { type: String, required: false },
     icon: { type: String },
     rulesIntro: {
       english: { type: String }, 

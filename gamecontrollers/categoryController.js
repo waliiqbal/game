@@ -8,7 +8,7 @@ const categoryData = model('category', categorySchema);
 
 const createcategory = async (req, res) => {
   try {
-    const { name, rules, icon, rulesIntro, background } = req.body;
+    const { name, nameAR, rules, rulesAR, icon, rulesIntro, background } = req.body;
 
     if (!name) {
       return res.status(400).json({ error: "Category name is required" });
@@ -16,7 +16,9 @@ const createcategory = async (req, res) => {
 
     const newCategory = new categoryData({
       name,
+      nameAR,
       rules,
+      rulesAR,
       icon,
       rulesIntro: {
         english: rulesIntro?.english || "",
