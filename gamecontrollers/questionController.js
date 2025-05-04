@@ -37,6 +37,30 @@ const uploadFile = async (req, res) => {
     }
 };
 
+const uploadAppFile = async (req, res) => {
+    try {
+      
+        const filePath = req.file.path;
+        const s3Url = await uploadToS3(req.file); 
+        console.log("lokout",filePath);
+
+        res.status(200).json({
+            message: "File Processed & Data Inserted",
+            data: s3Url
+        });
+
+        
+    } catch (error) {
+        console.error(" Error Processing  File:", error);
+        res.status(500).json({ message: ` Error Processing File: ${error.message}` });
+        return res.status(400).json({
+            data: null,
+            message: `Error Processing File: ${error.message}`,
+            error: `Error Processing File: ${error.message}`,
+          });
+    }
+};
+
 const createMeme = async (req, res) => {
     try {
         const filePath = req.file.path;
@@ -574,7 +598,7 @@ const exportCategoryQuestions = async (req, res) => {
 
 
 
-  export { createquestion, getAge, uploadFile, createQuestionbyself, deletequetion, Editquestion, getQuestions, getquestionbyId, createMeme, getMemesType, getMeme,getMemesForAdmin, deleteMeme, getQuestionforgame , exportCategoryQuestions  };
+  export { createquestion, uploadAppFile, getAge, uploadFile, createQuestionbyself, deletequetion, Editquestion, getQuestions, getquestionbyId, createMeme, getMemesType, getMeme,getMemesForAdmin, deleteMeme, getQuestionforgame , exportCategoryQuestions  };
 
 
 

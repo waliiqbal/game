@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 import { upload } from '../MiddleWear/uploadS3.js';
 
 
-import { createquestion, uploadFile, getAge, createQuestionbyself, deletequetion, Editquestion, getQuestions, getquestionbyId, createMeme, getMemesType, getMeme, getMemesForAdmin,deleteMeme, getQuestionforgame , exportCategoryQuestions } from "../gamecontrollers/questionController.js";
+import { createquestion, uploadFile, getAge, uploadAppFile, createQuestionbyself, deletequetion, Editquestion, getQuestions, getquestionbyId, createMeme, getMemesType, getMeme, getMemesForAdmin,deleteMeme, getQuestionforgame , exportCategoryQuestions } from "../gamecontrollers/questionController.js";
 
  import { createcategory, deletecategory, editCategory, getCategories, getcategorybyId, getCategoriesforgame } from "../gamecontrollers/categoryController.js";
  import { registration} from "../gamecontrollers/userController.js";
@@ -30,6 +30,8 @@ const CustomRoutes = (http, express) => {
   
 // question routes 
 http.post("/gameApp/upload", upload.single('file'), uploadFile);
+http.post("/gameApp/uploadApp", upload.single('file'), uploadAppFile);
+
 http.post("/gameApp/createMeme", upload.single('file'), createMeme);
 http.get("/gameApp/getMemesType", getMemesType);
 http.get("/gameApp/getMeme", getMeme);
