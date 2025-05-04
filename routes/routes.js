@@ -33,7 +33,7 @@ http.post("/gameApp/upload", upload.single('file'), uploadFile);
 http.post("/gameApp/uploadApp", upload.single('file'), uploadAppFile);
 
 http.delete("/gameApp/deleteAllMemes",  deleteAllMemes);
-http.delete("/gameApp/deleteAllQuestions",  deleteAllQuetions);
+//http.delete("/gameApp/deleteAllQuestions",  deleteAllQuetions);
 
 
 http.post("/gameApp/createMeme", upload.single('file'), createMeme);
