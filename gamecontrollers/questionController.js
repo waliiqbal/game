@@ -204,6 +204,22 @@ const deleteMeme = async (req, res) => {
     }
 };
 
+const deleteAllMemes = async (req, res) => {
+    try {
+        
+
+        const deletedMeme = await memeData.deleteMany();
+
+        if (!deletedMeme) {
+            return res.status(404).json({ error: "Meme not found" });
+        }
+
+        res.status(200).json({ message: "Meme deleted successfully", data: deletedMeme });
+    } catch (error) {
+        console.error("Error deleting meme:", error);
+        res.status(500).json({ error: "Error deleting meme" });
+    }
+};
 
  
 const createquestion = async (req, res) => {
@@ -394,6 +410,27 @@ const deletequetion = async (req, res) => {
   
   
       const deletedquestion = await questionData.deleteOne({_id: _id});
+  
+     
+      if (!deletedquestion) {
+        return res.status(404).json({ error: 'Customer not found' });
+      }
+  
+      
+      res.status(200).json({ message: 'question deleted successfully', data: deletedquestion });
+    } catch (error) {
+      console.error(error); 
+      res.status(500).json({ error: 'Error deleting question' });
+    }
+  };
+
+  const deleteAllQuetions = async (req, res) => {
+    try {
+    
+      
+  
+  
+      const deletedquestion = await questionData.deleteMany();
   
      
       if (!deletedquestion) {
@@ -598,7 +635,7 @@ const exportCategoryQuestions = async (req, res) => {
 
 
 
-  export { createquestion, uploadAppFile, getAge, uploadFile, createQuestionbyself, deletequetion, Editquestion, getQuestions, getquestionbyId, createMeme, getMemesType, getMeme,getMemesForAdmin, deleteMeme, getQuestionforgame , exportCategoryQuestions  };
+  export { createquestion, uploadAppFile, deleteAllQuetions, deleteAllMemes, getAge, uploadFile, createQuestionbyself, deletequetion, Editquestion, getQuestions, getquestionbyId, createMeme, getMemesType, getMeme,getMemesForAdmin, deleteMeme, getQuestionforgame , exportCategoryQuestions  };
 
 
 
