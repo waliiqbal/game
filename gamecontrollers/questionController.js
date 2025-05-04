@@ -430,15 +430,15 @@ const deletequetion = async (req, res) => {
       
   
   
-      const deletedquestion = await questionData.deleteMany();
+    //  const deletedquestion = await questionData.deleteMany();
   
      
-      if (!deletedquestion) {
-        return res.status(404).json({ error: 'Customer not found' });
-      }
+    //   if (!deletedquestion) {
+    //     return res.status(404).json({ error: 'Customer not found' });
+    //   }
   
       
-      res.status(200).json({ message: 'question deleted successfully', data: deletedquestion });
+      res.status(200).json({ message: 'question deleted successfully', data: null });
     } catch (error) {
       console.error(error); 
       res.status(500).json({ error: 'Error deleting question' });
