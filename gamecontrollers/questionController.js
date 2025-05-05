@@ -267,7 +267,7 @@ const createquestion = async (req, res) => {
                     C: { ar: row.option_ar_c || "", en: row.option_en_c || "" },
                     D: { ar: row.option_ar_d || "", en: row.option_en_d || "" }
                 },
-                correctAnswer: row.answer.toUpperCase(),
+                correctAnswer: row?.answer?.trim()?.toUpperCase(),
                 ageRange: ageRangeArray
             };
         }));
