@@ -427,10 +427,11 @@ const deletequetion = async (req, res) => {
   const deleteAllQuetions = async (req, res) => {
     try {
     
-      
+        const _id = req.params._id;
+
   
   
-    //  const deletedquestion = await questionData.deleteMany();
+      const deletedquestion = await questionData.deleteMany({category: _id });
   
      
     //   if (!deletedquestion) {
@@ -438,10 +439,30 @@ const deletequetion = async (req, res) => {
     //   }
   
       
-      res.status(200).json({ message: 'question deleted successfully', data: null });
+      res.status(200).json({ message: 'question deleted successfully', data: deletedquestion });
     } catch (error) {
       console.error(error); 
       res.status(500).json({ error: 'Error deleting question' });
+    }
+  };
+
+  const deleteSelectedQuestions = async (req, res) => {
+    try {
+      const { _id } = req.params;
+      const { idx } = req.body;         // idx is an array of question IDs
+  
+      const result = await questionData.deleteMany({
+        category: _id,
+        _id: { $in: idx }
+      });
+  
+      return res.status(200).json({
+        message: `Deleted ${result.deletedCount} question(s)`,
+        deletedCount: result.deletedCount
+      });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ error: 'Error deleting questions' });
     }
   };
   
@@ -635,7 +656,7 @@ const exportCategoryQuestions = async (req, res) => {
 
 
 
-  export { createquestion, uploadAppFile, deleteAllQuetions, deleteAllMemes, getAge, uploadFile, createQuestionbyself, deletequetion, Editquestion, getQuestions, getquestionbyId, createMeme, getMemesType, getMeme,getMemesForAdmin, deleteMeme, getQuestionforgame , exportCategoryQuestions  };
+  export { createquestion, uploadAppFile, deleteAllQuetions, deleteSelectedQuestions,deleteAllMemes, getAge, uploadFile, createQuestionbyself, deletequetion, Editquestion, getQuestions, getquestionbyId, createMeme, getMemesType, getMeme,getMemesForAdmin, deleteMeme, getQuestionforgame , exportCategoryQuestions  };
 
 
 

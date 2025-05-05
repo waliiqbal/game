@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 import { upload } from '../MiddleWear/uploadS3.js';
 
 
-import { createquestion, deleteAllQuetions, deleteAllMemes, uploadFile, getAge, uploadAppFile, createQuestionbyself, deletequetion, Editquestion, getQuestions, getquestionbyId, createMeme, getMemesType, getMeme, getMemesForAdmin,deleteMeme, getQuestionforgame , exportCategoryQuestions } from "../gamecontrollers/questionController.js";
+import { createquestion, deleteSelectedQuestions, deleteAllQuetions, deleteAllMemes, uploadFile, getAge, uploadAppFile, createQuestionbyself, deletequetion, Editquestion, getQuestions, getquestionbyId, createMeme, getMemesType, getMeme, getMemesForAdmin,deleteMeme, getQuestionforgame , exportCategoryQuestions } from "../gamecontrollers/questionController.js";
 
  import { createcategory, deletecategory, editCategory, getCategories, getcategorybyId, getCategoriesforgame } from "../gamecontrollers/categoryController.js";
  import { registration} from "../gamecontrollers/userController.js";
@@ -33,7 +33,9 @@ http.post("/gameApp/upload", upload.single('file'), uploadFile);
 http.post("/gameApp/uploadApp", upload.single('file'), uploadAppFile);
 
 http.delete("/gameApp/deleteAllMemes",  deleteAllMemes);
-//http.delete("/gameApp/deleteAllQuestions",  deleteAllQuetions);
+http.delete("/gameApp/deleteAllQuestions/:_id",  deleteAllQuetions);
+
+http.post("/gameApp/deleteSelectedQuestions/:_id",  deleteSelectedQuestions);
 
 
 http.post("/gameApp/createMeme", upload.single('file'), createMeme);
