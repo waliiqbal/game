@@ -7,6 +7,10 @@ const roundSchema = new Schema(
     type: Boolean,
     required: true
   },
+  stationsCount: {
+    type: Number,
+    default: 4
+  },
   roundOrder: [
     {
       type: {
@@ -44,7 +48,24 @@ const roundSchema = new Schema(
     pauseAfterQuestion: {
       type: Number,
       default: 3
+    },
+    doublePoint: {
+      type: Boolean,
+      default: false
+    },
+    halfPoint: {
+      type: Boolean,
+      default: false
+    },
+    stealPoint: {
+      type: Boolean,
+      default: false
+    },
+    suggestBreak: {
+      type: Boolean,
+      default: false
     }
+    
   }
 },
 { timestamps: true }

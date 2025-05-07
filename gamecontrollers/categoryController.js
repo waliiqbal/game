@@ -66,7 +66,7 @@ const getCategories = async (req, res) => {
           nextCursor = categories[categories.length - 1]._id;
       }
 
-      const totalCategories = await categoryData.countDocuments(filter);
+      const totalCategories = await categoryData.countDocuments();
 
       res.status(200).json({
           message: "Categories fetched successfully!",

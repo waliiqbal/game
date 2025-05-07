@@ -260,6 +260,10 @@ const createquestion = async (req, res) => {
                     en: row.question_en || "",
                     ar: row.question_ar || ""
                 },
+                extraNotes: {
+                    en: row.notes_en || "",
+                    ar: row.notes_ar || ""
+                }, 
                 media: row.media_en || "",
                 options: {
                     A: { ar: row.option_ar_a || "", en: row.option_en_a || "" },
@@ -298,6 +302,7 @@ const createQuestionbyself = async (req, res) => {
             categoryId ,
             questionType,
             text,
+            extraNotes,
             media,
             options,
             correctAnswer,
@@ -312,6 +317,7 @@ const createQuestionbyself = async (req, res) => {
             category: categoryId,  
             questionType,
             text,
+            extraNotes,
             media,
             options,
             correctAnswer,
@@ -336,6 +342,11 @@ const createQuestionbyself = async (req, res) => {
 const getQuestions = async (req, res) => {
     try {
         const { categoryId, questionType, ageRange, limit = 10, cursor } = req.query;
+
+        let countfilter = {};
+        if(ageRange){
+            countfilter.ageRange = ageRange;
+        }
 
         const category = await categoryData.findOne({ _id: categoryId });
         if (!category) {
@@ -366,7 +377,7 @@ const getQuestions = async (req, res) => {
 
         res.status(200).json({
             message: "Questions fetched successfully",
-            totalQuestions: await questionData.countDocuments(query),
+            totalQuestions: await questionData.countDocuments(countfilter),
             data: questions,
             nextCursor: nextCursor,
             categoryName: category.name,  
@@ -475,6 +486,7 @@ const deletequetion = async (req, res) => {
             categoryId,
             questionType,
             text,
+            extraNotes,
             media,
             options,
             correctAnswer,
@@ -491,6 +503,7 @@ const deletequetion = async (req, res) => {
                 category: categoryId, 
                 questionType,
                 text,
+                extraNotes,
                 media,
                 options,
                 correctAnswer,

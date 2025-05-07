@@ -18,6 +18,10 @@ const questionSchema = new Schema({
         en: { type: String, required: false },
         ar: { type: String, required: false }
     },
+    extraNotes: {
+      en: { type: String, required: false },
+      ar: { type: String, required: false }
+  },
     media: { type: String, required: false },
     options: {
         A: {

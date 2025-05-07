@@ -5,13 +5,14 @@ import { categorySchema } from '../schema/categorySchema.js';
 const categoryData = model('category', categorySchema);
 
 const createRound =  async (req, res) => {
-const { isManual, roundOrder, roundSettings } = req.body;
+const { isManual, roundOrder, roundSettings, stationsCount } = req.body;
 
 try {
   const newRound = new roundData({
     isManual,
     roundOrder,
-    roundSettings
+    roundSettings,
+    stationsCount
   });
 
   const savedRound = await newRound.save();
@@ -39,12 +40,12 @@ const getRound = async (req, res) => {
 };
 
 const updateRound = async (req, res) => {
-  const { isManual, roundOrder, roundSettings, _id } = req.body;
+  const { isManual, roundOrder, roundSettings, stationsCount, _id } = req.body;
 
   try {
     const updatedRound = await roundData.findOneAndUpdate(
       {_id: _id}, 
-      { isManual, roundOrder, roundSettings }, 
+      { isManual, roundOrder, roundSettings, stationsCount }, 
       { new: true, upsert: true } 
     );
 
