@@ -149,8 +149,11 @@ const getMemesForAdmin = async (req, res) => {
         const { limit = 10, cursor, memeType } = req.query;
 
         let query = {};
+        let queryfilter = {};
+        
         if(memeType){
             query.memeType = memeType;
+            queryfilter.memeType = memeType;
         }
         if (cursor) {
             query._id = { $gt: cursor }; 
@@ -172,7 +175,7 @@ const getMemesForAdmin = async (req, res) => {
 
         res.status(200).json({
             message: "Memes fetched successfully",
-            totalMemes: await memeData.countDocuments(),
+            totalMemes: await memeData.countDocuments(queryfilter),
             data: memes,
             nextCursor: nextCursor, 
         });
@@ -343,10 +346,7 @@ const getQuestions = async (req, res) => {
     try {
         const { categoryId, questionType, ageRange, limit = 10, cursor } = req.query;
 
-        let countfilter = {};
-        if(ageRange){
-            countfilter.ageRange = ageRange;
-        }
+        
 
         const category = await categoryData.findOne({ _id: categoryId });
         if (!category) {
@@ -355,8 +355,12 @@ const getQuestions = async (req, res) => {
 
         let query = { category: category._id };
         if (questionType) query.questionType = questionType;
-        if (ageRange) query.ageRange = ageRange;
         
+        let countfilter = {category: category._id};
+        if(ageRange){
+            countfilter.ageRange = ageRange;
+            query.ageRange = ageRange;
+        }
 
         if (cursor) {
             query._id = { $gt: cursor }; 
