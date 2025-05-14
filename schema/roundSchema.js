@@ -11,6 +11,10 @@ const roundSchema = new Schema(
     type: Number,
     default: 4
   },
+  ageRange: {
+    type: String,
+    default: "All"
+  },
   roundOrder: [
     {
       type: {
