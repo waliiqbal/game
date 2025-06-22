@@ -41,7 +41,7 @@ const createcategory = async (req, res) => {
 
 const getCategories = async (req, res) => {
   try {
-      const { name, limit = 10, cursor } = req.query;
+      const { name, limit = 10, cursor, } = req.query;
       const filter = {};
 
       if (name) {
@@ -53,7 +53,8 @@ const getCategories = async (req, res) => {
       if (cursor) {
           query._id = { $gt: cursor }; 
       }
-
+      
+   
       const limitNumber = parseInt(limit, 10);
       
       const categories = await categoryData.find(query)

@@ -344,7 +344,7 @@ const createQuestionbyself = async (req, res) => {
 
 const getQuestions = async (req, res) => {
     try {
-        const { categoryId, questionType, ageRange, limit = 10, cursor } = req.query;
+        const { categoryId, questionType, ageRange, limit = 10, cursor, search } = req.query;
 
         
 
@@ -365,6 +365,16 @@ const getQuestions = async (req, res) => {
         if (cursor) {
             query._id = { $gt: cursor }; 
         }
+
+         if (search) {
+      const regex = new RegExp(search, "i");
+      const orClause = [
+        { "text.en": regex },
+        { "text.ar": regex }
+      ];
+      query.$or = orClause;
+      countfilter.$or = orClause;
+    }
 
     
         const limitNumber = parseInt(limit, 10);
@@ -599,71 +609,84 @@ const getQuestionforgame = async (req, res) => {
 };
 
 const exportCategoryQuestions = async (req, res) => {
-    try {
-        const { categoryId } = req.body;
+  try {
+    const { categoryId } = req.body;
 
-        if (!categoryId) return res.status(400).json({ message: "categoryId is required" });
-
-        const questions = await questionData.find({ category: categoryId });
-
-        if (questions.length === 0) return res.status(404).json({ message: "No questions found for this category" });
-
-        const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet('Questions');
-
-        // Excel Headers
-        worksheet.columns = [
-            { header: 'questionType', key: 'questionType', width: 15 },
-            { header: 'question_en', key: 'question_en', width: 40 },
-            { header: 'question_ar', key: 'question_ar', width: 40 },
-            { header: 'media', key: 'media', width: 20 },
-            { header: 'optionA_en', key: 'optionA_en', width: 20 },
-            { header: 'optionA_ar', key: 'optionA_ar', width: 20 },
-            { header: 'optionB_en', key: 'optionB_en', width: 20 },
-            { header: 'optionB_ar', key: 'optionB_ar', width: 20 },
-            { header: 'optionC_en', key: 'optionC_en', width: 20 },
-            { header: 'optionC_ar', key: 'optionC_ar', width: 20 },
-            { header: 'optionD_en', key: 'optionD_en', width: 20 },
-            { header: 'optionD_ar', key: 'optionD_ar', width: 20 },
-            { header: 'correctAnswer', key: 'correctAnswer', width: 15 },
-            { header: 'ageRange', key: 'ageRange', width: 15 },
-            { header: 'isShow', key: 'isShow', width: 10 }
-        ];
-
-        // Add Data
-        questions.forEach(q => {
-            worksheet.addRow({
-                questionType: q.questionType,
-                question_en: q.text?.en || '',
-                question_ar: q.text?.ar || '',
-                media: q.media || '',
-                optionA_en: q.options?.A?.en || '',
-                optionA_ar: q.options?.A?.ar || '',
-                optionB_en: q.options?.B?.en || '',
-                optionB_ar: q.options?.B?.ar || '',
-                optionC_en: q.options?.C?.en || '',
-                optionC_ar: q.options?.C?.ar || '',
-                optionD_en: q.options?.D?.en || '',
-                optionD_ar: q.options?.D?.ar || '',
-                correctAnswer: q.correctAnswer || '',
-                ageRange: q.ageRange || '',
-                isShow: q.isShow ? 'true' : 'false'
-            });
-        });
-
-        // ✅ Proper Headers for Download
-        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        res.setHeader('Content-Disposition', 'attachment; filename="questions.xlsx"');
-
-        // ✅ Write to response stream directly
-        await workbook.xlsx.write(res);
-        res.end();
-
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Internal Server Error" });
+    if (!categoryId) {
+      return res.status(400).json({ message: "categoryId is required" });
     }
-};
+
+    // 🔹 Step 1: Get category from DB
+    const category = await categoryData.findById(categoryId);
+    if (!category) {
+      return res.status(404).json({ message: "Category not found" });
+    }
+
+    // 🔹 Step 2: Format category name for filename
+    const categoryName = category.name?.replace(/\s+/g, '_') || 'category';
+    const fileName = `questions_${categoryName}.xlsx`;
+
+    // 🔹 Step 3: Get questions
+    const questions = await questionData.find({ category: categoryId });
+    if (questions.length === 0) {
+      return res.status(404).json({ message: "No questions found for this category" });
+    }
+
+    // 🔹 Step 4: Create Excel workbook
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Questions');
+
+    worksheet.columns = [
+      { header: 'questionType', key: 'questionType', width: 15 },
+      { header: 'question_en', key: 'question_en', width: 40 },
+      { header: 'question_ar', key: 'question_ar', width: 40 },
+      { header: 'media', key: 'media', width: 20 },
+      { header: 'optionA_en', key: 'optionA_en', width: 20 },
+      { header: 'optionA_ar', key: 'optionA_ar', width: 20 },
+      { header: 'optionB_en', key: 'optionB_en', width: 20 },
+      { header: 'optionB_ar', key: 'optionB_ar', width: 20 },
+      { header: 'optionC_en', key: 'optionC_en', width: 20 },
+      { header: 'optionC_ar', key: 'optionC_ar', width: 20 },
+      { header: 'optionD_en', key: 'optionD_en', width: 20 },
+      { header: 'optionD_ar', key: 'optionD_ar', width: 20 },
+      { header: 'correctAnswer', key: 'correctAnswer', width: 15 },
+      { header: 'ageRange', key: 'ageRange', width: 15 },
+      { header: 'isShow', key: 'isShow', width: 10 }
+    ];
+
+    // 🔹 Step 5: Fill worksheet with question data
+    questions.forEach(q => {
+      worksheet.addRow({
+        questionType: q.questionType || '',
+        question_en: q.text?.en || '',
+        question_ar: q.text?.ar || '',
+        media: q.media || '',
+        optionA_en: q.options?.A?.en || '',
+        optionA_ar: q.options?.A?.ar || '',
+        optionB_en: q.options?.B?.en || '',
+        optionB_ar: q.options?.B?.ar || '',
+        optionC_en: q.options?.C?.en || '',
+        optionC_ar: q.options?.C?.ar || '',
+        optionD_en: q.options?.D?.en || '',
+        optionD_ar: q.options?.D?.ar || '',
+        correctAnswer: q.correctAnswer || '',
+        ageRange: q.ageRange || '',
+        isShow: q.isShow ? 'true' : 'false'
+      });
+    });
+
+    // 🔹 Step 6: Set headers for download
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+
+    // 🔹 Step 7: Send Excel file to frontend
+    await workbook.xlsx.write(res);
+    
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error", error: error.message });
+  }
+}
 
 
 
