@@ -4,6 +4,7 @@ const { readFile, utils } = xlsx;
 import fs from 'fs';
 import ExcelJS from 'exceljs';
 import { uploadToS3 } from '../MiddleWear/uploadS3.js';
+import mongoose from 'mongoose';
 
 
 
@@ -11,12 +12,22 @@ import { uploadToS3 } from '../MiddleWear/uploadS3.js';
 
 
 import { categorySchema } from '../schema/categorySchema.js';
-
 const categoryData = model('category', categorySchema);
 import { questionSchema } from '../schema/questionSchema.js';
 const questionData = model('question', questionSchema);
+import { gameSchema } from '../schema/gameSchema.js';
+const gameData = model('game', gameSchema);
+
 import { memeSchema } from '../schema/memeSchema.js';
 const memeData = model('meme', memeSchema);
+
+import { userSchema } from '../schema/userSchema.js';
+const userData = model('user', userSchema);
+
+import { gamehistorySchema } from '../schema/gamehistorySchema.js';
+import { console } from 'inspector';
+const gamehistoryData = model('gamehistory', gamehistorySchema);
+
 
 
 
@@ -549,64 +560,190 @@ const getAge = (req, res) => {
     });
 };
 
-const getQuestionforgame = async (req, res) => {
-    try {
-        const { categoryId, language, ageRange } = req.query;
 
-        if (!categoryId) {
-            return res.status(400).json({ message: "categoryId is required!" });
-        }
 
-       
-        const category = await categoryData.findOne({ _id: categoryId });
-        if (!category) {
-            return res.status(404).json({ message: "Category not found!" });
-        }
+const getQuestionForGame = async (req, res) => {
+  try {
+    console.debug("a");
+    const { gameId, categoryId, language, ageRange } = req.query;
 
-        let query = { category: category._id, isShow: false };
-        if (language) query.language = language;
+    // ✅ Step 1: Validate required query params
+    if (!gameId || !categoryId) {
+      return res.status(400).json({
+        success: false,
+        message: "Both gameId and categoryId are required.",
+      });
+    }
 
-        if (ageRange) {
-            query.ageRange = { $in: ageRange };
-        }
+    // ✅ Step 2: Convert categoryId to ObjectId
+    const categoryObjectId = new mongoose.Types.ObjectId(categoryId);
 
-      
-        let remainingQuestions = await questionData.countDocuments(query);
+    // ✅ Step 3: Find the game
+    const game = await gameData.findById(gameId);
+    if (!game) {
+      return res.status(404).json({
+        success: false,
+        message: "Game not found.",
+      });
+    }
 
-      
-        if (remainingQuestions === 0) {
-            await questionData.updateMany({ category: category._id }, { $set: { isShow: false } });
+    const userIds = game.users;
 
-         
-            remainingQuestions = await questionData.countDocuments(query);
-        }
+    // ✅ Step 4: Find game history
+    const gameHistory = await gamehistoryData.findOne({ gameId });
+    if (!gameHistory) {
+      return res.status(404).json({
+        success: false,
+        message: "Game history not found.",
+      });
+    }
 
-      
-        let question = await questionData.aggregate([
-            { $match: query },
-            { $sample: { size: 1 } }
-        ]);
+    // ✅ Step 5: Find or create seenQuestionsByCategory entry
+    let categoryEntry = gameHistory.seenQuestionsByCategory.find(
+      (entry) => entry.categoryId.toString() === categoryId.toString()
+    );
 
-     
-        if (question.length > 0) {
-            await questionData.updateOne({ _id: question[0]._id }, { $set: { isShow: true } });
-        }
+    if (!categoryEntry) {
+      categoryEntry = {
+        categoryId: categoryObjectId,
+        allquestions: [],
+      };
+      gameHistory.seenQuestionsByCategory.push(categoryEntry);
+    }
 
-        res.status(200).json({
-            success: true,
-            message: "Question fetched successfully",
-            data: question.length > 0 ? question[0] : null,
-           
+    // ✅ Step 6: Extract seen question IDs
+   const seenQuestionIds = Array.isArray(categoryEntry.allquestions)
+  ? categoryEntry.allquestions.map((q) => new mongoose.Types.ObjectId(q))
+  : [];
+
+    console.log("👁️ Seen Question IDs:", seenQuestionIds);
+
+    // ✅ Step 7: Build base query
+    const baseQuery = {
+      category: categoryObjectId,
+      _id: { $nin: seenQuestionIds },
+    };
+
+    if (language) {
+      baseQuery[`text.${language}`] = { $exists: true, $ne: "" };
+    }
+
+    if (ageRange) {
+      baseQuery.ageRange = { $in: ageRange.split(",").map((a) => a.trim()) };
+    }
+
+    console.log("📦 Final baseQuery:", baseQuery);
+
+    // ✅ Step 8: Try fetching 1 random new question
+    const randomQuestion = await questionData.aggregate([
+      { $match: baseQuery },
+      { $sample: { size: 1 } },
+    ]);
+
+    console.log("🎲 Random Question from baseQuery:", randomQuestion);
+
+    let selectedQuestion = null;
+
+    if (randomQuestion.length > 0) {
+      selectedQuestion = randomQuestion[0];
+
+      if (!categoryEntry.allquestions.includes(selectedQuestion._id)) {
+        categoryEntry.allquestions.push(selectedQuestion._id);
+      }
+
+      await gamehistoryData.findByIdAndUpdate(gameHistory._id, gameHistory);
+    } else {
+      // ✅ Step 9: Try fallback
+      const fallbackQuery = {
+        category: categoryObjectId,
+        _id: { $in: seenQuestionIds },
+        isShow: false,
+      };
+
+      if (language) {
+        fallbackQuery[`text.${language}`] = { $exists: true, $ne: "" };
+      }
+
+      if (ageRange) {
+        fallbackQuery.ageRange = { $in: ageRange.split(",").map((a) => a.trim()) };
+      }
+
+      const fallbackResult = await questionData.aggregate([
+        { $match: fallbackQuery },
+        { $sample: { size: 1 } },
+      ]);
+
+      if (fallbackResult.length > 0) {
+        selectedQuestion = fallbackResult[0];
+
+        await questionData.findByIdAndUpdate(selectedQuestion._id, {
+          isShow: true,
         });
+      } else {
+        // ✅ Step 10: Reset isShow for future games
+        await questionData.updateMany(
+          {
+            _id: { $in: seenQuestionIds },
+            category: categoryObjectId,
+          },
+          { $set: { isShow: false } }
+        );
 
-    } catch (error) {
-        res.status(500).json({
+        return res.status(200).json({
           success: false,
-          message: 'Failed to create user',
-          error: error.message, 
+          message: "No fallback questions available. All marked for future games.",
+          data: null,
         });
       }
+    }
+
+    // ✅ Step 11: Update each user's seen questions
+    for (const userId of userIds) {
+      const user = await userData.findById(userId);
+      if (!user) continue;
+
+      let userCategoryEntry = user.questionsSeen.find(
+        (entry) => entry.categoryId.toString() === categoryId.toString()
+      );
+
+      if (!userCategoryEntry) {
+        user.questionsSeen.push({
+          categoryId: categoryObjectId,
+          questions: [selectedQuestion._id],
+        });
+      } else {
+        const alreadyExists = userCategoryEntry.questions.some(
+          (qId) => qId.toString() === selectedQuestion._id.toString()
+        );
+
+        if (!alreadyExists) {
+          userCategoryEntry.questions.push(selectedQuestion._id);
+        }
+      }
+
+      await userData.findByIdAndUpdate(user._id, user);
+    }
+
+    // ✅ Step 12: Send final response
+    return res.status(200).json({
+      success: true,
+      message: "Question fetched successfully.",
+      data: selectedQuestion,
+    });
+
+  } catch (error) {
+    console.error("❌ Error in getQuestionForGame:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error.",
+      error: error.message,
+    });
+  }
 };
+
+
+
+
 
 const exportCategoryQuestions = async (req, res) => {
   try {
@@ -696,7 +833,7 @@ const exportCategoryQuestions = async (req, res) => {
 
 
 
-  export { createquestion, uploadAppFile, deleteAllQuetions, deleteSelectedQuestions,deleteAllMemes, getAge, uploadFile, createQuestionbyself, deletequetion, Editquestion, getQuestions, getquestionbyId, createMeme, getMemesType, getMeme,getMemesForAdmin, deleteMeme, getQuestionforgame , exportCategoryQuestions  };
+  export { createquestion, uploadAppFile, deleteAllQuetions, deleteSelectedQuestions,deleteAllMemes, getAge, uploadFile, createQuestionbyself, deletequetion, Editquestion, getQuestions, getquestionbyId, createMeme, getMemesType, getMeme,getMemesForAdmin, deleteMeme, getQuestionForGame , exportCategoryQuestions  };
 
 
 

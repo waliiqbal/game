@@ -1,9 +1,17 @@
 
 
-
+import { Schema } from 'mongoose';
 import mongoose from 'mongoose';
 
 const userSchema = new mongoose.Schema({
+
+ questionsSeen: [
+    {
+      categoryId: { type: Schema.Types.ObjectId, ref: 'category', required: true },
+      questions: [{ type: Schema.Types.ObjectId, ref: 'question' }]
+    }
+  ],
+
   name: {
     type: String,
     required: true,

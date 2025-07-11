@@ -5,42 +5,91 @@ import { categorySchema } from '../schema/categorySchema.js';
 const categoryData = model('category', categorySchema);
 import { userSchema } from '../schema/userSchema.js';
 const userData = model('user', userSchema);
+import { gamehistorySchema } from '../schema/gamehistorySchema.js';
+const gamehistoryData = model('gamehistory', gamehistorySchema);
+
 
 
 
 const startGame = async (req, res) => {
-    try {
-        const { userIds } = req.body; 
-    
-        if (!userIds || userIds.length === 0) {
-          return res.status(400).json({
-            data: null,
-            message: "Validation error",
-            error: "User IDs required",
-          });
+  try {
+    const { userIds, categoriesIds } = req.body;
+
+    // ✅ Step 1: Validate input
+    if (!userIds || userIds.length === 0) {
+      return res.status(400).json({ success: false, message: "User IDs are required" });
+    }
+
+    if (!categoriesIds || categoriesIds.length === 0) {
+      return res.status(400).json({ success: false, message: "At least one category ID is required" });
+    }
+
+    // ✅ Step 2: Create new game
+    const newGame = await gameData.create({
+      users: userIds,
+      categories: categoriesIds,
+      rounds: []
+    });
+
+    const gameId = newGame._id;
+
+    // ✅ Step 3: Get all user documents from DB
+    const users = await userData.find({ _id: { $in: userIds } });
+
+    // ✅ Step 4: Loop per category to collect all seen questions (from all users)
+    const seenQuestionsByCategory = [];
+
+    for (const categoryId of categoriesIds) {
+      let allSeenQuestions = []; // yahan sab users ke seen questions add honge for this category
+
+      // 🔁 Loop each user
+      for (const user of users) {
+        // ✅ Find if user has seen any questions for this category
+        const categoryEntry = user.questionsSeen.find(
+          (q) => q.categoryId.toString() === categoryId.toString()
+        );
+
+        // ✅ If user has seen some questions in this category
+        if (categoryEntry && Array.isArray(categoryEntry.questions)) {
+          const questionIds = categoryEntry.questions.map(qid => qid.toString()); // string bana do for uniqueness
+          allSeenQuestions.push(...questionIds); // ✅ add to main array
         }
-    
-     
-        const newGame = new gameData({
-          users: userIds, 
-          rounds: [], 
-        });
-    
-        await newGame.save();
-    
-        res.status(201).json({
-            success: true,
-            message: "Game started successfully",
-            data: { gameId: newGame._id },
-          });
-        } catch (error) {
-          res.status(500).json({
-            success: false,
-            message: "Internal Server Error",
-            error: error.message,
-          });
-        }
-    };
+      }
+
+      // ✅ Step 5: Remove duplicates from combined array
+      const uniqueSeenQuestions = [...new Set(allSeenQuestions)];
+
+      // ✅ Step 6: Push into final result array
+      seenQuestionsByCategory.push({
+        categoryId,
+        questions: uniqueSeenQuestions
+      });
+    }
+
+    // ✅ Step 7: Save gameHistory document
+    await gamehistoryData.create({
+      gameId,
+      seenQuestionsByCategory
+    });
+
+    // ✅ Step 8: Return success response
+    return res.status(201).json({
+      success: true,
+      message: "Game started and game history saved.",
+      data: { gameId }
+    });
+
+  } catch (error) {
+    console.error("Start Game Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message
+    });
+  }
+};
+
+
 
     const roundEnd = async (req, res) => {
         try {

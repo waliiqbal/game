@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 import { upload } from '../MiddleWear/uploadS3.js';
 
 
-import { createquestion, deleteSelectedQuestions, deleteAllQuetions, deleteAllMemes, uploadFile, getAge, uploadAppFile, createQuestionbyself, deletequetion, Editquestion, getQuestions, getquestionbyId, createMeme, getMemesType, getMeme, getMemesForAdmin,deleteMeme, getQuestionforgame , exportCategoryQuestions } from "../gamecontrollers/questionController.js";
+import { createquestion, deleteSelectedQuestions, deleteAllQuetions, deleteAllMemes, uploadFile, getAge, uploadAppFile, createQuestionbyself, deletequetion, Editquestion, getQuestions, getquestionbyId, createMeme, getMemesType, getMeme, getMemesForAdmin,deleteMeme, getQuestionForGame , exportCategoryQuestions } from "../gamecontrollers/questionController.js";
 
  import { createcategory, deletecategory, editCategory, getCategories, getcategorybyId, getCategoriesforgame } from "../gamecontrollers/categoryController.js";
  import { registration} from "../gamecontrollers/userController.js";
@@ -50,7 +50,7 @@ http.post("/gameApp/createQuestionbyself", createQuestionbyself);
 http.post("/gameApp/exportCategoryQuestions", exportCategoryQuestions);
 
 http.get("/gameApp/getQuestions", getQuestions);
-http.get("/gameApp/getQuestionforgame", getQuestionforgame);
+http.get("/gameApp/getQuestionForGame", getQuestionForGame);
 
 
 

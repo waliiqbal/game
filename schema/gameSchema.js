@@ -8,6 +8,9 @@ const gameSchema = new Schema(
   {
     users: [{ type: mongoose.Schema.Types.ObjectId, ref: "user" }], 
 
+    categories: [{ type: mongoose.Schema.Types.ObjectId, ref: "category" }],
+   
+
     rounds: [
       {
         category: { type: mongoose.Schema.Types.ObjectId, ref: "category", required: false }, 
