@@ -616,7 +616,8 @@ const getQuestionForGame = async (req, res) => {
   ? categoryEntry.allquestions.map((q) => new mongoose.Types.ObjectId(q))
   : [];
 
-    console.log("👁️ Seen Question IDs:", seenQuestionIds);
+
+
 
     // ✅ Step 7: Build base query
     const baseQuery = {
@@ -632,7 +633,7 @@ const getQuestionForGame = async (req, res) => {
       baseQuery.ageRange = { $in: ageRange.split(",").map((a) => a.trim()) };
     }
 
-    console.log("📦 Final baseQuery:", baseQuery);
+  
 
     // ✅ Step 8: Try fetching 1 random new question
     const randomQuestion = await questionData.aggregate([

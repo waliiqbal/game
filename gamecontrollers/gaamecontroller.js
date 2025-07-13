@@ -62,7 +62,7 @@ const startGame = async (req, res) => {
       // ✅ Step 6: Push into final result array
       seenQuestionsByCategory.push({
         categoryId,
-        questions: uniqueSeenQuestions
+        allquestions: uniqueSeenQuestions
       });
     }
 
