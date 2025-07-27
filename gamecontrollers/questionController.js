@@ -237,38 +237,44 @@ const deleteAllMemes = async (req, res) => {
 
  
 const createquestion = async (req, res) => {
-    const filePath = req.file.path; 
+    const filePath = req.file.path;
 
     try {
-      
-        
-        
         const workbook = readFile(filePath);
-        const sheetName = workbook.SheetNames[0]; 
+        const sheetName = workbook.SheetNames[0];
         const jsonData = utils.sheet_to_json(workbook.Sheets[sheetName]);
 
         console.log("✅ Excel Data Processed:", jsonData);
 
-       
         const questions = await Promise.all(jsonData.map(async (row) => {
-         
             const categoryName = row.category;
 
-           
-             let category = await categoryData.findOne({ name: { $regex: new RegExp(`^${categoryName}$`, 'i') } });
-            
+            const category = await categoryData.findOne({
+                name: { $regex: new RegExp(`^${categoryName}$`, 'i') }
+            });
 
             if (!category) {
-                console.log("category not found")
-                return ;
+                console.log("❌ Category not found:", categoryName);
+                return null;
             }
 
-            const ageRangeArray = row.age_range 
-            ? row.age_range.split(',').map(item => item.trim().replace(/"/g, '')) 
-            : [];
-            
+            const ageRangeArray = row.age_range
+                ? row.age_range.split(',').map(item => item.trim().replace(/"/g, ''))
+                : [];
+
+            // ✅ Check if this question already exists
+            const existingQuestion = await questionData.findOne({
+                "text.en": row.question_en?.trim(),
+                "text.ar": row.question_ar?.trim(),
+                category: category._id
+            });
+
+            if (existingQuestion) {
+                return null; // ❌ Duplicate
+            }
+
             return {
-                category: category._id,  
+                category: category._id,
                 questionType: row.question_type,
                 text: {
                     en: row.question_en || "",
@@ -277,11 +283,11 @@ const createquestion = async (req, res) => {
                 extraNotes: {
                     en: row.notes_en || "",
                     ar: row.notes_ar || ""
-                }, 
+                },
                 media: row.media_en || "",
                 options: {
                     A: { ar: row.option_ar_a || "", en: row.option_en_a || "" },
-                    B: { ar:  row.option_ar_b || "", en: row.option_en_b || "" },
+                    B: { ar: row.option_ar_b || "", en: row.option_en_b || "" },
                     C: { ar: row.option_ar_c || "", en: row.option_en_c || "" },
                     D: { ar: row.option_ar_d || "", en: row.option_en_d || "" }
                 },
@@ -290,24 +296,45 @@ const createquestion = async (req, res) => {
             };
         }));
 
-         const validQuestion = questions.filter(q => q !== null && q !== undefined);
-        await questionData.insertMany (validQuestion);
+        const validQuestions = questions.filter(q => q !== null && q !== undefined);
+
+        // ✅ If no new questions found, respond with "already submitted"
+        if (validQuestions.length === 0) {
+            fs.unlink(filePath, (err) => {
+                if (err) console.error("❌ Error deleting file:", err);
+                else console.log("🗑️ File deleted:", filePath);
+            });
+
+            return res.status(200).json({
+                message: "You have submitted this file already"
+            });
+        }
+
+        // ✅ Insert only new questions
+        await questionData.insertMany(validQuestions);
 
         fs.unlink(filePath, (err) => {
-            if (err) console.error(" Error deleting file:", err);
-            else console.log("File deleted:", filePath);
+            if (err) console.error("❌ Error deleting file:", err);
+            else console.log("🗑️ File deleted:", filePath);
         });
 
-        res.status(200).json({ message: "✅ Excel File Processed & Data Inserted" });
+        res.status(200).json({
+            message: "✅ Excel File Processed & Data Inserted"
+        });
+
     } catch (error) {
         fs.unlink(filePath, (err) => {
-            if (err) console.error(" Error deleting file:", err);
-            else console.log(" File deleted:", filePath);
+            if (err) console.error("❌ Error deleting file:", err);
+            else console.log("🗑️ File deleted after error:", filePath);
         });
-        console.error(" Error Processing Excel File:", error);
-        res.status(500).json({ message: `Error Processing Excel File: ${error.message}` });
+
+        console.error("❌ Error Processing Excel File:", error);
+        res.status(500).json({
+            message: `❌ Error Processing Excel File: ${error.message}`
+        });
     }
 };
+
 
 
 const createQuestionbyself = async (req, res) => {
