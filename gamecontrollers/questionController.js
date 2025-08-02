@@ -15,6 +15,10 @@ import { categorySchema } from '../schema/categorySchema.js';
 const categoryData = model('category', categorySchema);
 import { questionSchema } from '../schema/questionSchema.js';
 const questionData = model('question', questionSchema);
+
+import { questionlogSchema } from '../schema/questionlogSchema.js';
+const questionLogData = model('questionlog', questionlogSchema);
+
 import { memeSchema } from '../schema/memeSchema.js';
 const memeData = model('meme', memeSchema);
 
@@ -572,13 +576,11 @@ const getQuestionforgame = async (req, res) => {
 
       
         let remainingQuestions = await questionData.countDocuments(query);
-
-      
+ 
         if (remainingQuestions === 0) {
             await questionData.updateMany({ category: category._id }, { $set: { isShow: false } });
-
-         
             remainingQuestions = await questionData.countDocuments(query);
+            
         }
 
       
@@ -587,9 +589,17 @@ const getQuestionforgame = async (req, res) => {
             { $sample: { size: 1 } }
         ]);
 
-     
         if (question.length > 0) {
             await questionData.updateOne({ _id: question[0]._id }, { $set: { isShow: true } });
+            const savelogs = new questionLogData({
+            categoryId: category?._id,
+            questionId: question[0]?._id,
+            ageRange: ageRange.toString()
+         });
+        await savelogs.save();
+
+
+            
         }
 
         res.status(200).json({
@@ -598,11 +608,12 @@ const getQuestionforgame = async (req, res) => {
             data: question.length > 0 ? question[0] : null,
            
         });
+        
 
     } catch (error) {
         res.status(500).json({
           success: false,
-          message: 'Failed to create user',
+          message: 'Failed to Question user',
           error: error.message, 
         });
       }
