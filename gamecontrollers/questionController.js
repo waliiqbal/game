@@ -594,7 +594,7 @@ const getQuestionforgame = async (req, res) => {
             const savelogs = new questionLogData({
             categoryId: category?._id,
             questionId: question[0]?._id,
-            ageRange: ageRange.toString()
+            ageRange: ageRange?.toString() || "unknown"
          });
         await savelogs.save();
 
