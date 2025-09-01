@@ -553,71 +553,172 @@ const getAge = (req, res) => {
     });
 };
 
-const getQuestionforgame = async (req, res) => {
-    try {
-        const { categoryId, language, ageRange } = req.query;
+// const getQuestionforgame = async (req, res) => {
+//     try {
+//         const { categoryId, language, ageRange } = req.query;
 
-        if (!categoryId) {
-            return res.status(400).json({ message: "categoryId is required!" });
-        }
+//         if (!categoryId) {
+//             return res.status(400).json({ message: "categoryId is required!" });
+//         }
 
        
-        const category = await categoryData.findOne({ _id: categoryId });
-        if (!category) {
-            return res.status(404).json({ message: "Category not found!" });
-        }
+//         const category = await categoryData.findOne({ _id: categoryId });
+//         if (!category) {
+//             return res.status(404).json({ message: "Category not found!" });
+//         }
 
-        let query = { category: category._id, isShow: false };
-        if (language) query.language = language;
+//         let query = { category: category._id, isShow: false };
+//         let upadteQuery = { category: category._id };
+//         if (language) query.language = language;
 
-        if (ageRange) {
-            query.ageRange = { $in: ageRange };
-        }
+//         if (ageRange) {
+//             query.ageRange = { $in: ageRange };
+//             upadteQuery.ageRange = { $in: ageRange };
+//         }
 
       
-        let remainingQuestions = await questionData.countDocuments(query);
+//         let remainingQuestions = await questionData.countDocuments(query);
  
-        if (remainingQuestions === 0) {
-            await questionData.updateMany({ category: category._id }, { $set: { isShow: false } });
-            remainingQuestions = await questionData.countDocuments(query);
+//         if (remainingQuestions < 9) {
+//             await questionData.updateMany(upadteQuery, { $set: { isShow: false } });
+//             remainingQuestions = await questionData.countDocuments(query);
             
-        }
+//         }
 
       
-        let question = await questionData.aggregate([
-            { $match: query },
-            { $sample: { size: 1 } }
-        ]);
+//         let question = await questionData.aggregate([
+//             { $match: query },
+//             { $sample: { size: 1 } }
+//         ]);
 
-        if (question.length > 0) {
-            await questionData.updateOne({ _id: question[0]._id }, { $set: { isShow: true } });
-            const savelogs = new questionLogData({
-            categoryId: category?._id,
-            questionId: question[0]?._id,
-            ageRange: ageRange?.toString() || "unknown"
-         });
-        await savelogs.save();
+//         if (question.length > 0) {
+//             await questionData.updateOne({ _id: question[0]._id }, { $set: { isShow: true } });
+//             const savelogs = new questionLogData({
+//             categoryId: category?._id,
+//             questionId: question[0]?._id,
+//             ageRange: ageRange?.toString() || "unknown"
+//          });
+//         await savelogs.save();
 
 
             
-        }
+//         }
 
-        res.status(200).json({
-            success: true,
-            message: "Question fetched successfully",
-            data: question.length > 0 ? question[0] : null,
+//         res.status(200).json({
+//             success: true,
+//             message: "Question fetched successfully",
+//             data: question.length > 0 ? question[0] : null,
            
-        });
+//         });
         
 
-    } catch (error) {
-        res.status(500).json({
-          success: false,
-          message: 'Failed to Question user',
-          error: error.message, 
-        });
+//     } catch (error) {
+//         res.status(500).json({
+//           success: false,
+//           message: 'Failed to Question user',
+//           error: error.message, 
+//         });
+//       }
+// };
+
+const getQuestionforgame = async (req, res) => {
+  try {
+    const { categoryId } = req.query;
+    let { ageRange } = req.query;
+
+    if (!categoryId) {
+      return res.status(400).json({ message: "categoryId is required!" });
+    }
+
+    const category = await categoryData.findById(categoryId).lean();
+    if (!category) {
+      return res.status(404).json({ message: "Category not found!" });
+    }
+
+    // ageRange ko normalize karein: ?ageRange=5-7,8-10  |  ?ageRange=5-7&ageRange=8-10
+    const ages = ageRange
+      ? (Array.isArray(ageRange)
+          ? ageRange
+          : String(ageRange).split(",").map(s => s.trim()).filter(Boolean))
+      : null;
+
+    // Base filters
+    const baseFilter = { category: category._id };
+    const ageFilter = ages ? { ageRange: { $in: ages } } : {};
+    const unseenFilter = { ...baseFilter, ...ageFilter, isShow: false };
+
+    // Kitnay bache?
+    let remainingQuestions = await questionData.countDocuments(unseenFilter);
+
+    // Requirement: agar remaining < 10 ho to usi age-range ke saare questions reset (isShow:false)
+    if (remainingQuestions < 10) {
+      await questionData.updateMany(
+        { ...baseFilter, ...ageFilter },
+        { $set: { isShow: false } }
+      );
+      remainingQuestions = await questionData.countDocuments(unseenFilter);
+    }
+
+    // Random question nikaalna
+    const [picked] = await questionData.aggregate([
+      { $match: unseenFilter },
+      { $sample: { size: 1 } }
+    ]);
+
+    if (picked) {
+      // Atomic guard: sirf tab set karo jab abhi bhi unseen ho
+      const upd = await questionData.updateOne(
+        { _id: picked._id, isShow: false },
+        { $set: { isShow: true } }
+      );
+
+
+      if (upd.modifiedCount === 0) {
+        const [retry] = await questionData.aggregate([
+          { $match: unseenFilter },
+          { $sample: { size: 1 } }
+        ]);
+        if (retry) {
+          await questionData.updateOne(
+            { _id: retry._id, isShow: false },
+            { $set: { isShow: true } }
+          );
+          await new questionLogData({
+            categoryId: category._id,
+            questionId: retry._id,
+            ageRange: ages ? ages.join(",") : "unknown",
+          }).save();
+
+          return res.status(200).json({
+            success: true,
+            message: "Question fetched successfully",
+            data: retry || null,
+          });
+        }
       }
+
+      await new questionLogData({
+        categoryId: category._id,
+        questionId: picked._id,
+        ageRange: ages ? ages.join(",") : "unknown",
+      }).save();
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Question fetched successfully",
+      data: picked || null,
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch question",
+      error: error.message,
+    });
+  }
 };
+
 
 const exportCategoryQuestions = async (req, res) => {
   try {
@@ -699,6 +800,44 @@ const exportCategoryQuestions = async (req, res) => {
   }
 }
 
+// get API to update isShow=false based on categoryId (if provided)
+
+const hideQuestions = async (req, res) => {
+  try {
+    const categoryId = req.params.categoryId;  // param se categoryId uthayenge
+
+    let result;
+
+    if (categoryId) {
+      // agar categoryId di gayi hai → sirf us category ke questions update honge
+      result = await questionData.updateMany(
+        { category: categoryId },
+        { $set: { isShow: false } }
+      );
+    } else {
+      // agar categoryId nahi di gayi → sare questions update ho jaye
+      result = await questionData.updateMany(
+        {},
+        { $set: { isShow: false } }
+      );
+    }
+
+    return res.json({
+      success: true,
+      message: categoryId
+        ? "Questions of given category hidden successfully"
+        : "All questions hidden successfully",
+      data: result
+    });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      error: "Error hiding questions"
+    });
+  }
+};
 
 
 
@@ -707,7 +846,12 @@ const exportCategoryQuestions = async (req, res) => {
 
 
 
-  export { createquestion, uploadAppFile, deleteAllQuetions, deleteSelectedQuestions,deleteAllMemes, getAge, uploadFile, createQuestionbyself, deletequetion, Editquestion, getQuestions, getquestionbyId, createMeme, getMemesType, getMeme,getMemesForAdmin, deleteMeme, getQuestionforgame , exportCategoryQuestions  };
+
+
+
+
+
+  export { createquestion, uploadAppFile, deleteAllQuetions, deleteSelectedQuestions,deleteAllMemes, getAge, uploadFile, createQuestionbyself, deletequetion, Editquestion, getQuestions, getquestionbyId, createMeme, getMemesType, getMeme,getMemesForAdmin, deleteMeme, getQuestionforgame , exportCategoryQuestions, hideQuestions  };
 
 
 

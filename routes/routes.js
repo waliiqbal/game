@@ -4,10 +4,10 @@ import jwt from 'jsonwebtoken';
 import { upload } from '../MiddleWear/uploadS3.js';
 
 
-import { createquestion, deleteSelectedQuestions, deleteAllQuetions, deleteAllMemes, uploadFile, getAge, uploadAppFile, createQuestionbyself, deletequetion, Editquestion, getQuestions, getquestionbyId, createMeme, getMemesType, getMeme, getMemesForAdmin,deleteMeme, getQuestionforgame , exportCategoryQuestions } from "../gamecontrollers/questionController.js";
+import { createquestion, deleteSelectedQuestions, deleteAllQuetions, deleteAllMemes, uploadFile, getAge, uploadAppFile, createQuestionbyself, deletequetion, Editquestion, getQuestions, getquestionbyId, createMeme, getMemesType, getMeme, getMemesForAdmin,deleteMeme, getQuestionforgame , exportCategoryQuestions, hideQuestions } from "../gamecontrollers/questionController.js";
 
  import { createcategory, deletecategory, editCategory, getCategories, getcategorybyId, getCategoriesforgame } from "../gamecontrollers/categoryController.js";
- import { registration} from "../gamecontrollers/userController.js";
+ import { registration, auth, updateUser} from "../gamecontrollers/userController.js";
  import { startGame,roundEnd, getMiniGames, getResult} from "../gamecontrollers/gaamecontroller.js";
   
  import { createRound, getRound, updateRound } from "../gamecontrollers/roundController.js";
@@ -38,6 +38,8 @@ http.delete("/gameApp/deleteAllQuestions/:_id",  deleteAllQuetions);
 http.post("/gameApp/deleteSelectedQuestions/:_id",  deleteSelectedQuestions);
 
 
+
+
 http.post("/gameApp/createMeme", upload.single('file'), createMeme);
 http.get("/gameApp/getMemesType", getMemesType);
 http.get("/gameApp/getMeme", getMeme);
@@ -46,7 +48,9 @@ http.get("/gameApp/getMemesForAdmin", getMemesForAdmin);
 http.delete("/gameApp/deleteMeme/:_id", deleteMeme);
 
 http.post("/gameApp/createquestion", uploadSheet.single("file"), createquestion);
-http.post("/gameApp/createQuestionbyself", createQuestionbyself);
+http.post("/gameApp/hideQuestions", hideQuestions);
+http.post("/gameApp/exportCategoryQuestions", exportCategoryQuestions);
+
 http.post("/gameApp/exportCategoryQuestions", exportCategoryQuestions);
 
 http.get("/gameApp/getQuestions", getQuestions);
@@ -72,7 +76,7 @@ http.get("/gameApp/getcategorybyId/:_id", getcategorybyId);
 
 //userroutes
 http.post("/gameApp/registration", registration);
-
+http.post('/gameApp/updateUser', auth, updateUser);
 
 // gameRoutes
 http.post("/gameApp/startGame", startGame);
